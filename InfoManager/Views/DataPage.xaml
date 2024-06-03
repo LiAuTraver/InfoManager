@@ -1,0 +1,102 @@
+﻿<Page
+    x:Class="InfoManager.Views.DataPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:InfoManager.ViewModels"
+    xmlns:control="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:services="using:InfoManager.Services"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <services:BooleanConverter x:Key="BooleanConverter" />
+    </Page.Resources>
+
+    <Page.DataContext>
+        <viewmodels:DataViewModel />
+    </Page.DataContext>
+    <!-- Add this line to provide design-time data
+        Because the Student Data has not been loaded yet,
+    the XAML designer doesn't know about these instances at design time,
+    so it can't resolve the bindings.
+    <d:Page.DataContext>
+    <viewmodels:DataViewModel>
+    <viewmodels:DataViewModel.Source>
+    <services:Student Id="" Name="" GradesString="" />
+    </viewmodels:DataViewModel.Source>
+    </viewmodels:DataViewModel>
+    </d:Page.DataContext>
+    -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Text="Data"
+            FontSize="25"
+            FontFamily="JetBrains Mono"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Left" />
+
+        <ToggleSwitch 
+            Grid.Row="0"
+            Grid.Column="1"
+            Header="Toggle Mode" 
+            OffContent="Viewing" 
+            OnContent="Editing" 
+            IsOn="False" 
+            Toggled="SwitchSortMode"
+            VerticalAlignment="Center"
+            Margin="10"/>
+
+        <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10">
+            <RadioButton Content="Sort by ID" IsChecked="True" Checked="SwitchSortMode"/>
+            <RadioButton Content="Sort by Average" Checked="SwitchSortMode"/>
+            <RadioButton Content="Sort by Name" Checked="SwitchSortMode"/>
+        </StackPanel>
+
+        <ToggleButton
+            Grid.Row="0"
+            Grid.Column="3"
+            Content="Ascending"
+            IsChecked="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BooleanConverter}}"
+            VerticalAlignment="Center"
+            Margin="10"/>
+
+        <ProgressRing 
+            Grid.Row="1"
+            Grid.Column="1"
+            IsActive="{x:Bind IsBusy, Mode=OneWay}" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Center"
+            Width="32" />
+
+        <control:DataGrid
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="4"
+            ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="True"
+            IsReadOnly="{x:Bind IsBusy, Mode=OneWay}">
+            <control:DataGrid.Columns>
+                <control:DataGridTextColumn Header="ID" Binding="{Binding Id}" />
+                <control:DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString}" />
+                <control:DataGridTextColumn Header="Average" Binding="{Binding Average}" />
+            </control:DataGrid.Columns>
+        </control:DataGrid>
+    </Grid>
+</Page>
