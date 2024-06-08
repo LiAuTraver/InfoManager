@@ -7,27 +7,16 @@
     xmlns:viewmodels="using:InfoManager.ViewModels"
     xmlns:control="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:services="using:InfoManager.Services"
+    xmlns:helpers="using:InfoManager.Helpers"
     mc:Ignorable="d">
-
-    <Page.Resources>
-        <services:BooleanConverter x:Key="BooleanConverter" />
-    </Page.Resources>
 
     <Page.DataContext>
         <viewmodels:DataViewModel />
     </Page.DataContext>
-    <!-- Add this line to provide design-time data
-        Because the Student Data has not been loaded yet,
-    the XAML designer doesn't know about these instances at design time,
-    so it can't resolve the bindings.
-    <d:Page.DataContext>
-    <viewmodels:DataViewModel>
-    <viewmodels:DataViewModel.Source>
-    <services:Student Id="" Name="" GradesString="" />
-    </viewmodels:DataViewModel.Source>
-    </viewmodels:DataViewModel>
-    </d:Page.DataContext>
-    -->
+    <Page.Resources>
+        <services:BoolToSortOrderConverter x:Key="BoolToSortOrderConverter" />
+        <helpers:BooleanNegationConvertor x:Key="BooleanNegationConvertor" />
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -35,67 +24,69 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
+        <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+            <Button Content="Save Data" IsEnabled="{x:Bind IsModified, Mode=TwoWay}" Margin="5" Click="SaveData" />
+            <ToggleButton Content="Enable Editing" Margin="5" Click="ToggleEditing" />
+        </StackPanel>
         <TextBlock
             Grid.Row="0"
-            Grid.Column="0"
+            Grid.Column="1"
             Text="Data"
-            FontSize="25"
+            FontSize="28"
             FontFamily="JetBrains Mono"
             VerticalAlignment="Center"
-            HorizontalAlignment="Left" />
-
-        <ToggleSwitch 
-            Grid.Row="0"
-            Grid.Column="1"
-            Header="Toggle Mode" 
-            OffContent="Viewing" 
-            OnContent="Editing" 
-            IsOn="False" 
-            Toggled="SwitchSortMode"
-            VerticalAlignment="Center"
-            Margin="10"/>
-
+            HorizontalAlignment="Center" />
         <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10">
-            <RadioButton Content="Sort by ID" IsChecked="True" Checked="SwitchSortMode"/>
-            <RadioButton Content="Sort by Average" Checked="SwitchSortMode"/>
-            <RadioButton Content="Sort by Name" Checked="SwitchSortMode"/>
+            <Button HorizontalAlignment="Center" Content="Add" Margin="5" Click="AddStudent"
+                    IsEnabled="{x:Bind IsEditing, Mode=TwoWay}" />
+            <Button HorizontalAlignment="Center" Content="Delete" Margin="5" Click="DeleteStudent"
+                    IsEnabled="{x:Bind IsEditing, Mode=TwoWay}" />
         </StackPanel>
 
-        <ToggleButton
+
+        <ToggleSwitch
             Grid.Row="0"
             Grid.Column="3"
-            Content="Ascending"
-            IsChecked="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BooleanConverter}}"
+            Header="Toggle Mode"
+            OffContent="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BoolToSortOrderConverter}}"
+            OnContent="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BoolToSortOrderConverter}}"
+            Toggled="ToggleAscending"
+            IsOn="False"
             VerticalAlignment="Center"
-            Margin="10"/>
+            Margin="10" />
 
-        <ProgressRing 
-            Grid.Row="1"
-            Grid.Column="1"
-            IsActive="{x:Bind IsBusy, Mode=OneWay}" 
-            HorizontalAlignment="Center" 
-            VerticalAlignment="Center"
-            Width="32" />
+        <StackPanel Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" Margin="10">
+            <RadioButton Content="Sort by ID" IsChecked="True" Checked="SwitchSortMode" />
+            <RadioButton Content="Sort by Average" Checked="SwitchSortMode" />
+            <RadioButton Content="Sort by Name" Checked="SwitchSortMode" />
+        </StackPanel>
 
         <control:DataGrid
             Grid.Row="1"
             Grid.Column="0"
-            Grid.ColumnSpan="4"
+            Grid.ColumnSpan="6"
             ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
             AutoGenerateColumns="False"
             CanUserSortColumns="True"
-            IsReadOnly="{x:Bind IsBusy, Mode=OneWay}">
+            IsReadOnly="{x:Bind IsEditing, Mode=TwoWay, Converter={StaticResource BooleanNegationConvertor}}">
+            <!-- ^^^ Bind IsReadOnly to !IsEditing using the converter ^^^ -->
             <control:DataGrid.Columns>
-                <control:DataGridTextColumn Header="ID" Binding="{Binding Id}" />
-                <control:DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString}" />
-                <control:DataGridTextColumn Header="Average" Binding="{Binding Average}" />
+                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                <!-- ReSharper disable Xaml.ConstructorWarning -->
+                <control:DataGridTextColumn Header="ID" Binding="{Binding Id,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="Name" Binding="{Binding Name,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="Average" Binding="{Binding Average,Mode=OneWay}" />
+                <!-- ReSharper restore Xaml.ConstructorWarning -->
+                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
             </control:DataGrid.Columns>
         </control:DataGrid>
     </Grid>

@@ -1,12 +1,9 @@
 ﻿using System.Collections.Specialized;
 using System.Web;
-
 using InfoManager.Contracts.Services;
-using InfoManager.ViewModels;
-
 using Microsoft.Windows.AppNotifications;
 
-namespace InfoManager.Notifications;
+namespace InfoManager.Services;
 
 public class AppNotificationService(INavigationService navigationService) : IAppNotificationService
 {

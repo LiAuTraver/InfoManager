@@ -6,20 +6,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="ContentArea">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="48" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <TextBlock
-            Grid.Row="0"
-            x:Uid="Launch_Title"
-            Style="{StaticResource PageTitleStyle}" />
-
-        <Grid Grid.Row="1">
-            
-        </Grid>
-        
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
+            <Image Source="ms-appx:///Assets/StoreLogo.png" Width="100" Height="100"></Image>
+            <TextBlock Text="Welcome Back" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"></TextBlock>
+        </StackPanel>
     </Grid>
 </Page>

@@ -135,4 +135,11 @@
   &lt;/actions&gt;
 &lt;/toast&gt;</value>
   </data>
+  <data name="ShellMenuItem_Views_Launch.Text" xml:space="preserve">
+    <value>Launch</value>
+  </data>
+  <data name="Launch_Title.Text" xml:space="preserve">
+    <value>Launch</value>
+    <comment>Page title for LaunchPage</comment>
+  </data>
 </root>

@@ -4,14 +4,16 @@ using InfoManager.Core.Contracts.Services;
 using InfoManager.Core.Services;
 using InfoManager.Helpers;
 using InfoManager.Models;
-using InfoManager.Notifications;
 using InfoManager.Services;
 using InfoManager.ViewModels;
 using InfoManager.Views;
 
+using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace InfoManager;
 
@@ -41,7 +43,10 @@ public partial class App : Application
 
     public static WindowEx MainWindow { get; } = new MainWindow();
 
-    public static UIElement? AppTitlebar { get; set; }
+    public static UIElement? AppTitlebar
+    {
+        get; set;
+    }
 
     public App()
     {
@@ -70,6 +75,8 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
 
             // Views and ViewModels
+            services.AddTransient<LaunchViewModel>();
+            services.AddTransient<LaunchPage>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
             services.AddTransient<DataViewModel>();
@@ -98,9 +105,47 @@ public partial class App : Application
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         base.OnLaunched(args);
-
         App.GetService<IAppNotificationService>().Show(string.Format("AppNotificationSamplePayload".GetLocalized(), AppContext.BaseDirectory));
 
         await App.GetService<IActivationService>().ActivateAsync(args);
+        // BUG: not working
+
+
+        // Do not repeat app initialization when the Window already has content,
+        // just ensure that the window is active
+
+        // avoid naming conflicts, because there are also `Frame` and `Window` classes in the `ABI. ...` namespace
+
+
+        //var rootFrame = new Microsoft.UI.Xaml.Controls.Frame();
+        ////if (Window.Current is null)
+        ////{
+        ////    // Create a Frame to act as the navigation context and navigate to the first page
+        ////    if (args.UWPLaunchActivatedEventArgs.PreviousExecutionState == ApplicationExecutionState.Terminated)
+        ////    {
+        ////        //TODO: Load state from previously suspended application
+        ////    }
+        ////    // Place the frame in the current Window
+        ////    Window.Current = new Window();
+        ////    Window.Current.Content = rootFrame;
+        ////}
+
+        //if (rootFrame.Content is null)
+        //{
+
+        //    // When the navigation stack isn't restored, navigate to the first page
+        //    // and configure the new page by passing required information as a navigation parameter
+        //    await Task.Delay(3000);
+        //    rootFrame.Navigate(typeof(LaunchPage), args.Arguments);
+        //    // sleep 3s
+        //    await Task.Delay(3000);
+        //    // Ensure the current window is active
+        //    //Window.Current.Activate();
+        //}
+    }
+
+    public void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+    {
+        throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
     }
 }

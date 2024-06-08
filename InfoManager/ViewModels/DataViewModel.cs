@@ -1,25 +1,42 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InfoManager.Services;
-using System.Linq;
+using PropertyChangedEventArgs = ABI.System.ComponentModel.PropertyChangedEventArgs;
 
 namespace InfoManager.ViewModels;
 
-public partial class DataViewModel : ObservableRecipient
+public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 {
-    private readonly Students _students = new(null, null);
+    private readonly Students _students = new(null, true);
+    private readonly Students _previousStudents = new(null, true);
 
-    public ObservableCollection<Student> Source { get; } = new();
+    public ObservableCollection<Student> Source
+    {
+        get;
+    } = [];
 
-    public IRelayCommand SortByIdCommand { get; }
-    public IRelayCommand SortByAverageCommand { get; }
-    public IRelayCommand SortByNameCommand { get; }
+    public IRelayCommand SortByIdCommand
+    {
+        get;
+    }
+
+    public IRelayCommand SortByAverageCommand
+    {
+        get;
+    }
+
+    public IRelayCommand SortByNameCommand
+    {
+        get;
+    }
+
     public DataViewModel()
     {
-        SortByIdCommand = new RelayCommand(SortById);
-        SortByAverageCommand = new RelayCommand(SortByAverage);
-        SortByNameCommand = new RelayCommand(SortByName);
+        SortByIdCommand = new RelayCommand<bool>(SortById);
+        SortByAverageCommand = new RelayCommand<bool>(SortByAverage);
+        SortByNameCommand = new RelayCommand<bool>(SortByName);
     }
 
     public async void OnNavigatedTo(object parameter)
@@ -34,30 +51,31 @@ public partial class DataViewModel : ObservableRecipient
         {
             return;
         }
+
+        // save a copy of the original data
+        // todo: how to handle null data?
+        // _originalData = _students.Clone() as Students ?? new Students(null, null);
         Source.Clear();
         foreach (var student in data)
         {
             Source.Add(student);
         }
-        SortById(); // Default sort by ID
+
+        SortById(true); // Default sort by ID
     }
 
-    private void SortById()
+    private void UpdateSource(List<Student> sortedData, object parameter)
     {
-        var sortedData = Source.OrderBy(student =>
+        if (parameter is not bool isAscending)
         {
-            if (int.TryParse(student.Id, out var numericId))
-            {
-                return numericId;
-            }
-            return int.MaxValue; // Handle non-numeric IDs by putting them at the end
-        }).ThenBy(student => student.Id).ToList();
+            return;
+        }
 
-        UpdateSource(sortedData);
-    }
+        if (isAscending is not true)
+        {
+            sortedData.Reverse();
+        }
 
-    private void UpdateSource(List<Student> sortedData)
-    {
         Source.Clear();
         foreach (var student in sortedData)
         {
@@ -65,27 +83,90 @@ public partial class DataViewModel : ObservableRecipient
         }
     }
 
-    private void SortByAverage()
+    private void SortById(bool isAscending)
+    {
+        var sortedData = Source
+            .OrderBy(student => int.TryParse(student.Id, out var numericId) ? numericId : int.MaxValue)
+            .ThenBy(student => student.Id).ToList();
+        UpdateSource(sortedData, isAscending);
+    }
+
+    private void SortByAverage(bool isAscending)
     {
         var sortedData = Source.OrderBy(student => student.Average).ToList();
-        UpdateSource(sortedData);
+        UpdateSource(sortedData, isAscending);
     }
 
-    private void SortByName()
+    private void SortByName(bool isAscending)
     {
         var sortedData = Source.OrderBy(student => student.Name).ToList();
-        UpdateSource(sortedData);
+        UpdateSource(sortedData, isAscending);
     }
 
-    public async Task AddDataAsync(Student student)
+    private async void DataPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        _students.AddStudent(student);
-        Source.Add(student);
+        if (sender is not Student student)
+        {
+            return;
+        }
+
+        var originalStudent = Source.FirstOrDefault(s => s.MyIndex == student.MyIndex);
+        if (originalStudent == null)
+        {
+            // handle property change
+            await AddDataAsync(student);
+            return;
+        }
+
+        originalStudent.UpdateInfo(student);
+    }
+
+    public async Task<bool> AddDataAsync(Student pendingAppendStudent)
+    {
+        _students.AddStudent(pendingAppendStudent);
+        Source.Add(pendingAppendStudent); // source must be called to update the UI
         await Task.CompletedTask;
+        return true;
+    }
+    public async Task<bool> AddDataAsync(string id, string name, string grades)
+    {
+        if(_students.FindStudent(id) is not null)
+        {
+            return false;
+        }
+
+        return await AddDataAsync(new Student(id, name, grades));
     }
 
-    public string GetPath()
+    public async Task<bool> DeleteDataAsync(string id)
     {
-        return _students.FilePath;
+        if (_students.FindStudent(id) is not { } pendingDroppedStudent)
+        {
+            return false;
+        }
+
+        _students.DeleteStudent(pendingDroppedStudent);
+        Source.Remove(pendingDroppedStudent);
+        await Task.CompletedTask;
+        return true;
     }
+
+    public async Task SaveDataToFileAsync(bool isOverwrite)
+    {
+        if (isOverwrite is not true)
+        {
+            await _previousStudents.SaveStudentsAsync(null);
+        }
+        else
+        {
+            await _students.SaveStudentsAsync(null);
+        }
+    }
+
+    // inherited from ObservableRecipient, no need to implement
+    // public event PropertyChangedEventHandler? PropertyChanged;
+    // protected virtual void OnPropertyChanged(string propertyName)
+    // {
+    //     PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+    // }
 }

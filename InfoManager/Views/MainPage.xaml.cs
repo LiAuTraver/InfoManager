@@ -39,9 +39,12 @@ public sealed partial class MainPage : Page
 
         // Set options for your file picker
         openPicker.ViewMode = PickerViewMode.Thumbnail;
-        openPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-        openPicker.FileTypeFilter.Add(".txt");
-        openPicker.FileTypeFilter.Add(".csv");
+        openPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        // currently do not support csv
+        // we forbid txt file too
+        // openPicker.FileTypeFilter.Add(".txt");
+        // openPicker.FileTypeFilter.Add(".csv");
+        openPicker.FileTypeFilter.Add(".json");
 
         // Open the picker for the user to pick a file
         var infoFile = await openPicker.PickSingleFileAsync();
