@@ -15,7 +15,7 @@
     <Page.Resources>
         <helpers:BoolToSortOrderConverter x:Key="BoolToSortOrderConverter" />
         <helpers:BooleanNegationConvertor x:Key="BooleanNegationConvertor" />
-        <helpers:SafeStringParseConverter x:Key="SafeStringParseConverter" />
+        <!-- <helpers:SafeStringParseConverter x:Key="SafeStringParseConverter" /> -->
     </Page.Resources>
 
     <Grid>

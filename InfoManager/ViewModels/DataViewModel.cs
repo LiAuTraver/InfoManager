@@ -4,16 +4,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InfoManager.Models;
 using InfoManager.Services;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using PropertyChangedEventArgs = ABI.System.ComponentModel.PropertyChangedEventArgs;
 
 namespace InfoManager.ViewModels;
 
 public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 {
-    private readonly StudentService _studentService = new(null, true);
-    private readonly StudentService _previousStudentService = new(null, true);
+    private StudentService _studentService = new(null, true);
 
     public ObservableCollection<Student> Source
     {
@@ -48,6 +44,10 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         {
             return;
         }
+        if(newFilePath != _studentService.FilePath)
+        {
+            _studentService = new StudentService(newFilePath,true);
+        }
 
         var data = await _studentService.GetGridDataAsync(newFilePath);
         if (data is null)
@@ -55,9 +55,6 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
             return;
         }
 
-        // save a copy of the original data
-        // todo: how to handle null data?
-        // _originalData = _students.Clone() as Students ?? new Students(null, null);
         Source.Clear();
         foreach (var student in data)
         {
@@ -108,7 +105,7 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 
     // ReSharper disable MemberCanBePrivate.Global
     public async Task<bool> AddDataAsync(Student pendingAppendStudent)
-    // ReSharper restore MemberCanBePrivate.Global
+        // ReSharper restore MemberCanBePrivate.Global
     {
         _studentService.AddStudent(pendingAppendStudent);
         Source.Add(pendingAppendStudent); // source must be called to update the UI
@@ -130,15 +127,15 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
     public bool? IsDataChanged(Student student)
         => _studentService.IsStudentInfoChanged(student)
             switch
-        {
-            true =>
-                // todo:update data in the UI
-                true,
-            false =>
-                // todo:also need to update the UI
-                false,
-            _ => null
-        };
+            {
+                true =>
+                    // todo:update data in the UI
+                    true,
+                false =>
+                    // todo:also need to update the UI
+                    false,
+                _ => null
+            };
 
     public async Task<bool> DeleteDataAsync(string id)
     {
@@ -157,7 +154,7 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
     {
         if (isOverwrite is not true)
         {
-            await _previousStudentService.SaveStudentsAsync(null);
+            await _studentService.RestoreData();
         }
         else
         {

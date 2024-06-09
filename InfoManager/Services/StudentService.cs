@@ -55,18 +55,24 @@ public partial class StudentService
         {
             return await GetGridDataAsyncNotJson(filePath);
         }
-
-        return await GetGridDataAsyncIsJson(filePath);
+        else
+        {
+            return await GetGridDataAsyncIsJson(filePath);
+        }
     }
 
     private async Task<IEnumerable<Student>> GetGridDataAsyncIsJson(string filePath)
     {
-        var jsonData = await File.ReadAllTextAsync(filePath) ?? throw new FileNotFoundException("File does not exist.");
-        var students = JsonConvert.DeserializeObject<List<Student>>(jsonData) ??
-                       throw new JsonException("Failed to parse JSON");
+        lock (FileLock)
+        {
+            var jsonData = File.ReadAllText(filePath) ?? throw new FileNotFoundException("File does not exist.");
+            var students = JsonConvert.DeserializeObject<List<Student>>(jsonData) ??
+                           throw new JsonException("Failed to parse JSON");
+            _students.AddRange(students);
+        }
 
-        _students.AddRange(students);
-
+        SaveCopyOf(filePath);
+        await Task.CompletedTask;
         return _students;
     }
 
@@ -101,39 +107,64 @@ public partial class StudentService
             data = await streamReader.ReadLineAsync();
         }
 
+        SaveCopyOf(filePath);
         return _students;
+    }
+
+    private void SaveCopyOf(string? newCopyFilePath)
+    {
+        // FIXME: lock is not working
+
+        // lock (FileLock)
+        // {
+        // File.Copy(FilePath, newCopyFilePath, true);
+        // File.SetAttributes(newCopyFilePath, FileAttributes.Hidden);
+        // }
     }
 
     public async Task SaveStudentsAsync(string? filePath)
     {
         filePath ??= FilePath;
         FilePath = filePath;
-        if (_isJson is not true)
+        lock (FileLock)
         {
-            await SaveDataAsyncNotJson(filePath);
+            if (_isJson is not true)
+            {
+                SaveDataNotJson(filePath);
+            }
+            else
+            {
+                SaveDataJson(filePath);
+            }
+            SaveCopyOf(filePath);
         }
-        else
-        {
-            await SaveDataAsyncJson(filePath);
-        }
+        await Task.CompletedTask;
     }
 
-    private async Task SaveDataAsyncJson(string filePath)
+
+    private void SaveDataJson(string filePath)
     {
         var jsonData = JsonConvert.SerializeObject(_students);
-        await File.WriteAllTextAsync(filePath, jsonData);
+        // lock (FileLock)
+        // {
+            File.WriteAllText(filePath, jsonData);
+        // }
     }
 
-    private async Task SaveDataAsyncNotJson(string filePath)
+    private void SaveDataNotJson(string filePath)
     {
-        await using var streamWriter = new StreamWriter(filePath);
-        await streamWriter.WriteLineAsync("ID,Grade,Name");
-        foreach (var student in _students)
-        {
-            await streamWriter.WriteLineAsync($"{student.Id},{string.Join(_delimiter, student.Grades)},{student.Name}");
-        }
+        // lock (FileLock)
+        // {
+            using var streamWriter = new StreamWriter(filePath);
+            streamWriter.WriteLine("ID,Grade,Name");
+            foreach (var student in _students)
+            {
+                streamWriter.WriteLine($"{student.Id},{string.Join(_delimiter, student.Grades)},{student.Name}");
+            }
+        // }
     }
 
+    // not working
     public bool? IsStudentInfoChanged(Student student)
     {
         var originalStudent = FindStudent(student.MyIndex);
@@ -151,6 +182,14 @@ public partial class StudentService
         _students[index] = student;
         return true;
     }
+
+    public async Task RestoreData()
+    {
+        _students.Clear();
+        // FIXME: lock is not working
+        //File.Copy(BackupFilePath, FilePath, true);
+        await GetGridDataAsync(FilePath);
+    }
 }
 
 // ctor and vars part
@@ -162,21 +201,19 @@ public partial class StudentService
     public string FilePath
     {
         get;
-        private set;
+        set;
     }
 
-    private const string DefaultFilePath = @"M:\Coding\WinRT\data.json";
+    private static readonly string DefaultFilePath = Path.Combine(AppContext.BaseDirectory, "data.json");
+    private static readonly string BackupFilePath = Path.Combine(AppContext.BaseDirectory, "data.bak");
     private readonly List<Student> _students = [];
+    private static readonly object FileLock = new();
 
     public StudentService(string? filePath, char? delimiter)
     {
         _delimiter = delimiter ?? ' ';
         FilePath = filePath ?? DefaultFilePath;
         _isJson = false;
-        if (File.Exists(FilePath) is not true)
-        {
-            throw new FileNotFoundException("File does not exist.");
-        }
     }
 
     public StudentService(string? filePath, bool isJson)
@@ -184,10 +221,6 @@ public partial class StudentService
         _isJson = isJson;
         FilePath = filePath ?? DefaultFilePath;
         _delimiter = ' ';
-        if (File.Exists(FilePath) is not true)
-        {
-            throw new FileNotFoundException("File does not exist.");
-        }
     }
 }
 

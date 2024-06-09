@@ -26,7 +26,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
             SecondaryButtonText = "Discard",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Close,
-            XamlRoot = XamlRoot
+            XamlRoot = ((FrameworkElement)sender).XamlRoot
         };
         var result = await saveDialog.ShowAsync();
         switch (result)
@@ -42,7 +42,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
                 IsModified = false;
                 return;
             default:
-                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
+                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
                 return;
         }
     }
@@ -80,12 +80,21 @@ public sealed partial class DataPage : INotifyPropertyChanged
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is not string newFilePath)
+        switch (e.Parameter)
         {
-            return;
+            case null:
+                return;
+            case string newFilePath:
+                if (newFilePath != @"-1")
+                {
+                    ViewModel.OnNavigatedTo(newFilePath);
+                    return;
+                }
+                goto default;
+            default:
+                _ = SimpleContentDialog("File path is invalid.", "Error", null);
+                return;
         }
-
-        ViewModel.OnNavigatedTo(newFilePath);
     }
 
     private void ToggleAscending(object sender, RoutedEventArgs e)
@@ -131,8 +140,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
             XamlRoot = (sender as FrameworkElement)?.XamlRoot
         };
 
-        var result = await dialog.ShowAsync();
-        switch (result)
+        switch (await dialog.ShowAsync())
         {
             case ContentDialogResult.None:
                 return;
@@ -166,10 +174,8 @@ public sealed partial class DataPage : INotifyPropertyChanged
                 IsModified = true;
                 return;
             case ContentDialogResult.Secondary:
-                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
-                return;
             default:
-                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
+                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
                 return;
         }
     }

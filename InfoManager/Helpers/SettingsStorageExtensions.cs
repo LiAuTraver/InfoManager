@@ -1,5 +1,4 @@
 ﻿using InfoManager.Core.Helpers;
-
 using Windows.Storage;
 using Windows.Storage.Streams;
 
@@ -49,9 +48,7 @@ public static class SettingsStorageExtensions
 
     public static async Task<T?> ReadAsync<T>(this ApplicationDataContainer settings, string key)
     {
-        object? obj;
-
-        if (settings.Values.TryGetValue(key, out obj))
+        if (settings.Values.TryGetValue(key, out var obj))
         {
             return await Json.ToObjectAsync<T>((string)obj);
         }
@@ -59,7 +56,8 @@ public static class SettingsStorageExtensions
         return default;
     }
 
-    public static async Task<StorageFile> SaveFileAsync(this StorageFolder folder, byte[] content, string fileName, CreationCollisionOption options = CreationCollisionOption.ReplaceExisting)
+    public static async Task<StorageFile> SaveFileAsync(this StorageFolder folder, byte[] content, string fileName,
+        CreationCollisionOption options = CreationCollisionOption.ReplaceExisting)
     {
         if (content == null)
         {
@@ -68,7 +66,7 @@ public static class SettingsStorageExtensions
 
         if (string.IsNullOrEmpty(fileName))
         {
-            throw new ArgumentException("File name is null or empty. Specify a valid file name", nameof(fileName));
+            throw new ArgumentException(@"File name is null or empty. Specify a valid file name", nameof(fileName));
         }
 
         var storageFile = await folder.CreateFileAsync(fileName, options);
@@ -80,29 +78,25 @@ public static class SettingsStorageExtensions
     {
         var item = await folder.TryGetItemAsync(fileName).AsTask().ConfigureAwait(false);
 
-        if ((item != null) && item.IsOfType(StorageItemTypes.File))
+        if ((item == null) || !item.IsOfType(StorageItemTypes.File))
         {
-            var storageFile = await folder.GetFileAsync(fileName);
-            var content = await storageFile.ReadBytesAsync();
-            return content;
+            return null;
         }
 
-        return null;
+        var storageFile = await folder.GetFileAsync(fileName);
+        var content = await storageFile.ReadBytesAsync();
+        return content;
+
     }
 
     public static async Task<byte[]?> ReadBytesAsync(this StorageFile file)
     {
-        if (file != null)
-        {
-            using IRandomAccessStream stream = await file.OpenReadAsync();
-            using var reader = new DataReader(stream.GetInputStreamAt(0));
-            await reader.LoadAsync((uint)stream.Size);
-            var bytes = new byte[stream.Size];
-            reader.ReadBytes(bytes);
-            return bytes;
-        }
-
-        return null;
+        using IRandomAccessStream stream = await file.OpenReadAsync();
+        using var reader = new DataReader(stream.GetInputStreamAt(0));
+        await reader.LoadAsync((uint)stream.Size);
+        var bytes = new byte[stream.Size];
+        reader.ReadBytes(bytes);
+        return bytes;
     }
 
     private static string GetFileName(string name)

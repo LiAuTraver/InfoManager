@@ -10,6 +10,7 @@ namespace InfoManager.Helpers;
 // Helper class to workaround custom title bar bugs.
 // DISCLAIMER: The resource key names and color values used below are subject to change. Do not depend on them.
 // https://github.com/microsoft/TemplateStudio/issues/4516
+// ReSharper disable All (note: for my own use; ReSharper's naming conventions differs from Microsoft's
 internal class TitleBarHelper
 {
     private const int WAINACTIVE = 0x00;

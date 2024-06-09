@@ -370,3 +370,6 @@ FodyWeavers.xsd
 
 # all obj folder
 **/obj/
+
+# template files
+TemplateStudio.xml

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace InfoManager.Helpers;
 
-public class RuntimeHelper
+public abstract class RuntimeHelper
 {
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int GetCurrentPackageFullName(ref int packageFullNameLength, StringBuilder? packageFullName);

@@ -1,1 +1,2 @@
-﻿global using WinUIEx;
+﻿// global using statements
+global using WinUIEx;

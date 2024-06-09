@@ -6,7 +6,6 @@ namespace InfoManager.Views;
 
 public sealed partial class MainPage : Page
 {
-    public string Result;
     public MainViewModel ViewModel
     {
         get;
@@ -16,45 +15,28 @@ public sealed partial class MainPage : Page
     {
         ViewModel = App.GetService<MainViewModel>();
         InitializeComponent();
-        Result = "Pick a File";
     }
 
     private async void OpenInfoFile(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        
         // Clear previous returned file name, if it exists, between iterations of this scenario
-        Result = "";
-
-        // Create a file picker
-        var openPicker = new FileOpenPicker();
-
-        // See the sample code below for how to make the window accessible from the App class.
-        var window = App.MainWindow;
-
+        var openPicker = new FileOpenPicker
+        {
+            ViewMode = PickerViewMode.Thumbnail,
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            // currently do not support csv
+            // we forbid txt file too
+            FileTypeFilter = { ".json" }
+        };
         // Retrieve the window handle (HWND) of the current WinUI 3 window.
-        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-
-        // Initialize the file picker with the window handle (HWND).
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your file picker
-        openPicker.ViewMode = PickerViewMode.Thumbnail;
-        openPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-        // currently do not support csv
-        // we forbid txt file too
-        // openPicker.FileTypeFilter.Add(".txt");
-        // openPicker.FileTypeFilter.Add(".csv");
-        openPicker.FileTypeFilter.Add(".json");
+        // Initialize the file picker with the window handle.
+        WinRT.Interop.InitializeWithWindow.Initialize(openPicker,
+            WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
 
         // Open the picker for the user to pick a file
         var infoFile = await openPicker.PickSingleFileAsync();
-        if (infoFile == null) {
-            Result = "Operation cancelled.";
-        } else {
-            // convert StorageFile to ScreenReader
-            var filePath = infoFile.Path;
-            Frame.Navigate(typeof(DataPage),filePath);
-            Result="File" + infoFile.ToString() + " has been opened.";
-        }
+        // convert StorageFile to ScreenReader
+        var filePath = infoFile.Path ?? @"-1";
+        Frame.Navigate(typeof(DataPage), filePath);
     }
 }

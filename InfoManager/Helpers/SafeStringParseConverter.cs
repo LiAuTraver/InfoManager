@@ -1,9 +1,14 @@
-﻿using Microsoft.UI.Xaml.Data;
+﻿using System.ComponentModel;
+using Microsoft.UI.Xaml.Data;
 
 namespace InfoManager.Helpers;
 
 public class SafeStringParseConverter : IValueConverter
 {
+    public SafeStringParseConverter()
+    {
+        throw new WarningException("Do not use this converter. No need to use it.");
+    }
     // public event EventHandler<ConversionExceptionEventArgs>? ConversionException;
 
     public object? Convert(object value, Type targetType, object parameter, string language)

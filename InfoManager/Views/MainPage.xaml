@@ -20,17 +20,16 @@
             FontSize="30"
             FontFamily="JetBrains Mono"
             FontWeight="Bold"
+            HorizontalAlignment="Center"
             Style="{StaticResource PageTitleStyle}" />
 
-        <controls:SettingsCard 
+        <controls:SettingsCard
             Grid.Row="1"
             Header="Open a data file to begin"
-            IsEnabled="True"
-        >
-            <Button 
+            IsEnabled="True">
+            <Button
                 Content="Open"
-                Click="OpenInfoFile"
-            />
+                Click="OpenInfoFile" />
         </controls:SettingsCard>
     </Grid>
 </Page>
