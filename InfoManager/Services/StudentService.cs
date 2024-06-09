@@ -114,7 +114,7 @@ public class StudentService
             var id = studentData[0];
             var name = studentData[1];
             var grades = studentData.Skip(2).Select(double.Parse).ToList() ?? throw new FormatException("ParseError");
-            _students.Add(new Student(name, id, grades));
+            _students.Add(new Student(id, name, grades));
             studentData = [];
             data = await streamReader.ReadLineAsync();
         }

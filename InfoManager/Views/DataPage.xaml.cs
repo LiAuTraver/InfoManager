@@ -196,7 +196,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
     {
         var idBox = new TextBox { Header = "ID" };
         var nameBox = new TextBox { Header = "Name" };
-        var gradeStringBox = new TextBox { Header = "Grade" };
+        var gradeStringBox = new TextBox { Header = "Grades" };
         switch (await new ContentDialog
         {
             Title = "Add",
@@ -233,13 +233,13 @@ public sealed partial class DataPage : INotifyPropertyChanged
 
             if (gradeStringBox.Text is not { } gradeString)
             {
-                await SimpleDialog("Grade cannot be empty.", "Warning", this);
+                await SimpleDialog("Grades cannot be empty.", "Warning", sender);
                 return;
             }
 
             if (await ViewModel.AddDataAsync(id, name, gradeString) is not true)
             {
-                await SimpleDialog("Student with ID \"" + id + "\" already exists.", "Error", this);
+                await SimpleDialog("Student with ID \"" + id + "\" already exists.", "Error", sender);
                 return;
             }
 

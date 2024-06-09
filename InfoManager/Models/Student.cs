@@ -13,19 +13,19 @@ public sealed class Student
     private string _gradesString;
 
     [JsonConstructor] // needed for deserialization otherwise it will throw an error because there are two ctors which take 3 parameters
-    public Student(string name, string id, List<double> grades)
+    public Student(string id, string name, List<double> grades)
     {
-        Name = name;
         Id = id;
+        Name = name;
         Grades = grades;
         Index++;
         MyIndex = Index;
     }
 
-    public Student(string name, string id, string gradeString)
+    public Student(string id, string name, string gradeString)
     {
-        Name = name;
         Id = id;
+        Name = name;
         GradesString = gradeString;
         Index++;
         MyIndex = Index;
@@ -80,7 +80,7 @@ public sealed class Student
 
     public object Clone() =>
         // deep copy
-        new Student(Name, Id, Grades.ToList());
+        new Student(Id,Name, Grades.ToList());
 
     public bool Equals(Student? other)
     {
