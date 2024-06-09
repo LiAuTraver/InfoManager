@@ -126,6 +126,7 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         return await AddDataAsync(new Student(id, name, grades));
     }
 
+    // failed
     public bool? IsDataChanged(Student student)
         => _studentService.IsStudentInfoChanged(student)
             switch

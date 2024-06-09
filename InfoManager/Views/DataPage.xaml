@@ -15,7 +15,7 @@
     <Page.Resources>
         <helpers:BoolToSortOrderConverter x:Key="BoolToSortOrderConverter" />
         <helpers:BooleanNegationConvertor x:Key="BooleanNegationConvertor" />
-        <!-- <helpers:SafeStringParseConverter x:Key="SafeStringParseConverter" /> -->
+        <helpers:SafeStringParseConverter x:Key="SafeStringParseConverter" />
     </Page.Resources>
 
     <Grid>
@@ -76,17 +76,20 @@
             ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
             AutoGenerateColumns="False"
             CanUserSortColumns="True"
+            CanUserReorderColumns="True"
+            CanUserResizeColumns="True"
             IsReadOnly="{x:Bind IsEditing, Mode=TwoWay, Converter={StaticResource BooleanNegationConvertor}}"
-            CellEditEnded="CellDataChanged">
-            <!-- BeginningEdit="CellDataTemp"> -->
+            BeginningEdit="CellDataOriginal"
+            CellEditEnding="CellDataModified">
+            <!-- CellEditEnded="CellDataChanged"> -->
             <!-- ^^^ Bind IsReadOnly to !IsEditing using the converter ^^^ -->
 
             <control:DataGrid.Columns>
                 <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                 <!-- ReSharper disable Xaml.ConstructorWarning -->
-                <control:DataGridTextColumn Header="ID" Binding="{Binding Id,Mode=OneWay}" />
-                <control:DataGridTextColumn Header="Name" Binding="{Binding Name,Mode=OneWay}" />
-                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString,Mode=OneWay}" />
+                <control:DataGridTextColumn Header="ID" Binding="{Binding Id,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="Name" Binding="{Binding Name,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString,Mode=TwoWay}" />
                 <control:DataGridTextColumn Header="Average" Binding="{Binding Average,Mode=OneWay}" />
                 <!-- ReSharper restore Xaml.ConstructorWarning -->
                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->

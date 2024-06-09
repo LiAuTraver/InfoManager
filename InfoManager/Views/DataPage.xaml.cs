@@ -237,39 +237,76 @@ public sealed partial class DataPage : INotifyPropertyChanged
         IsModified = true;
     }
 
-    private async void CellDataChanged(object? sender, DataGridCellEditEndedEventArgs e)
+    private string RestoreData(string header)
+        => header switch
+        {
+            "ID" => (_cellDataTemp as Student)?.Id ?? string.Empty,
+            "Name" => (_cellDataTemp as Student)?.Name ?? string.Empty,
+            "Grades" => (_cellDataTemp as Student)?.GradesString ?? string.Empty,
+            _ => string.Empty
+        };
+
+    private void CellDataOriginal(object? sender, DataGridBeginningEditEventArgs e)
     {
-        if(e.Row.DataContext is not Student student)
-        {
-            await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
-            return;
-        }
-        // find that student in the list
-        var isDataChanged = ViewModel.IsDataChanged(student);
-        if (isDataChanged is null)
-        {
-            // parse error or something else
-            await SimpleContentDialog("The format of the data isn't correct.", "Error", sender);
-            return;
-        }
-
-        // fixme: temporarily do it: shouldn't use the whole list to update the UI
-        UpdateSort();
-        if(isDataChanged is not true)
-        {
-            // do not change `IsModified` here; maybe the data is modified before or not modified at all
-
-
-            await SimpleContentDialog("Data not changed.", "Info", sender);
-            return;
-        }
-        // successfully modified student; no need to prompt a dialog
-        IsModified = true;
+        _cellDataTemp = e.Row.DataContext as Student;
     }
-    // private void CellDataTemp(object? sender, DataGridBeginningEditEventArgs e)
-    // {
-    //     _cellDataTemp = e.Row.DataContext as Student;
-    // }
+
+    // this event execute before the binding data is updated,
+    // so we can get the original data and handle the exception at UI level.
+    // `CellEditEnded` event is executed after the binding data is updated,
+    // use converter can't handle the exception at UI level either.
+    private void CellDataModified(object? sender, DataGridCellEditEndingEventArgs e)
+    {
+        try
+        {
+            var dataString = (e.EditingElement as TextBox)?.Text;
+            var header = e.Column.Header?.ToString();
+            switch (header)
+            {
+                case "Grades":
+                    _ = dataString
+                        ?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => double.Parse(s.Trim()))
+                        .ToList();
+                    IsModified = true; // if parse failed, this line won't be executed
+                    break;
+                case "ID":
+                    _ = double.Parse(dataString?.Trim() ?? string.Empty);
+                    IsModified = true;
+                    break;
+            }
+        }
+        catch (Exception exception)
+        {
+            // e.Cancel = true;
+
+            // CANNOT use `await`:
+            // THIS event handler cannot be async,(some can, see `SaveData` function above)
+            // so `await` will throw an exception: `InteropServices.COMException`,
+            // which means multiple dialog boxes are shown at the same time (why?? dunno)
+            //
+            // also here use a `_` to ignore the return value to suppress IDE and compiler warnings
+            _ = SimpleContentDialog(exception.Message, "Error", sender);
+            (e.EditingElement as TextBox)!.Text = RestoreData(e.Column.Header?.ToString() ?? string.Empty);
+            // but I need to use that value to determine the result of the dialog
+            // NO WAY! failed. same error as above
+            // switch (dialog.ShowAsync().GetResults())
+            // {
+            //     case ContentDialogResult.Primary:
+            //         // Restore the original data
+            //         (e.EditingElement as TextBox)!.Text = RestoreData(e.Column.Header?.ToString() ?? string.Empty);
+            //         e.Cancel = false;
+            //         break;
+            //     case ContentDialogResult.None:
+            //     // goto default;
+            //     case ContentDialogResult.Secondary:
+            //     // goto default;
+            //     default:
+            //         e.Cancel = true;
+            //         break;
+            // }
+        }
+    }
 }
 
 // member variables and ctor part
@@ -285,7 +322,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
         this.NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
-    // private object? _cellDataTemp = null;
+    private object? _cellDataTemp;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -365,3 +402,34 @@ public sealed partial class DataPage : INotifyPropertyChanged
         get;
     }
 }
+
+
+// private async void CellDataChanged(object? sender, DataGridCellEditEndedEventArgs e)
+// {
+//     if(e.Row.DataContext is not Student student)
+//     {
+//         await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
+//         return;
+//     }
+//     // find that student in the list
+//     var isDataChanged = ViewModel.IsDataChanged(student);
+//     if (isDataChanged is null)
+//     {
+//         // parse error or something else
+//         await SimpleContentDialog("The format of the data isn't correct.", "Error", sender);
+//         return;
+//     }
+//
+//     // fixme: temporarily do it: shouldn't use the whole list to update the UI
+//     UpdateSort();
+//     if(isDataChanged is not true)
+//     {
+//         // do not change `IsModified` here; maybe the data is modified before or not modified at all
+//
+//
+//         await SimpleContentDialog("Data not changed.", "Info", sender);
+//         return;
+//     }
+//     // successfully modified student; no need to prompt a dialog
+//     IsModified = true;
+// }
