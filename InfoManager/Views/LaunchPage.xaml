@@ -8,8 +8,8 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
-            <Image Source="ms-appx:///Assets/StoreLogo.png" Width="100" Height="100"></Image>
-            <TextBlock Text="Welcome Back" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"></TextBlock>
+            <Image Source="ms-appx:///Assets/StoreLogo.png" Width="100" Height="100" />
+            <TextBlock Text="Welcome Back" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
         </StackPanel>
     </Grid>
 </Page>

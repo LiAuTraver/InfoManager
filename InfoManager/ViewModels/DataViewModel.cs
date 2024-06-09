@@ -1,13 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using InfoManager.Models;
 using InfoManager.Services;
 
 namespace InfoManager.ViewModels;
 
-public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
+public class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 {
     private StudentService _studentService = new(null, true);
 
@@ -16,37 +15,16 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         get;
     } = [];
 
-    public IRelayCommand SortByIdCommand
-    {
-        get;
-    }
-
-    public IRelayCommand SortByAverageCommand
-    {
-        get;
-    }
-
-    public IRelayCommand SortByNameCommand
-    {
-        get;
-    }
-
-    public DataViewModel()
-    {
-        SortByIdCommand = new RelayCommand<bool>(SortById);
-        SortByAverageCommand = new RelayCommand<bool>(SortByAverage);
-        SortByNameCommand = new RelayCommand<bool>(SortByName);
-    }
-
     public async void OnNavigatedTo(object parameter)
     {
         if (parameter is not string newFilePath)
         {
             return;
         }
-        if(newFilePath != _studentService.FilePath)
+
+        if (newFilePath != _studentService.FilePath)
         {
-            _studentService = new StudentService(newFilePath,true);
+            _studentService = new StudentService(newFilePath, true);
         }
 
         var data = await _studentService.GetGridDataAsync(newFilePath);
@@ -61,57 +39,37 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
             Source.Add(student);
         }
 
-        SortById(true); // Default sort by ID
+        // Default sort by ID
+        SortData("Id", true);
     }
 
-    private void UpdateSource(List<Student> sortedData, object parameter)
+    public void SortData(string propertyName, bool isAscending)
     {
-        if (parameter is not bool isAscending)
+        if (propertyName != string.Empty)
         {
-            return;
+            _currentSortPropertyName = propertyName;
+        }
+        else
+        {
+            propertyName = _currentSortPropertyName;
         }
 
-        if (isAscending is not true)
-        {
-            sortedData.Reverse();
-        }
-
+        var sortedData = StudentSortService.Sort(Source, propertyName, isAscending);
         Source.Clear();
         foreach (var student in sortedData)
         {
             Source.Add(student);
         }
-    }
-
-    private void SortById(bool isAscending)
-    {
-        var sortedData = Source
-            .OrderBy(student => int.TryParse(student.Id, out var numericId) ? numericId : int.MaxValue)
-            .ThenBy(student => student.Id).ToList();
-        UpdateSource(sortedData, isAscending);
-    }
-
-    private void SortByAverage(bool isAscending)
-    {
-        var sortedData = Source.OrderBy(student => student.Average).ToList();
-        UpdateSource(sortedData, isAscending);
-    }
-
-    private void SortByName(bool isAscending)
-    {
-        var sortedData = Source.OrderBy(student => student.Name).ToList();
-        UpdateSource(sortedData, isAscending);
-    }
-
-    // ReSharper disable MemberCanBePrivate.Global
+    } // ReSharper disable MemberCanBePrivate.Global
     public async Task<bool> AddDataAsync(Student pendingAppendStudent)
-        // ReSharper restore MemberCanBePrivate.Global
     {
         _studentService.AddStudent(pendingAppendStudent);
         Source.Add(pendingAppendStudent); // source must be called to update the UI
         await Task.CompletedTask;
         return true;
     }
+
+    private string _currentSortPropertyName = "Id";
 
     public async Task<bool> AddDataAsync(string id, string name, string grades)
     {
@@ -123,19 +81,19 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         return await AddDataAsync(new Student(id, name, grades));
     }
 
-    // failed
+    // failed, also the name `IsDataChanged` is not appropriate for a nullable return type
     public bool? IsDataChanged(Student student)
         => _studentService.IsStudentInfoChanged(student)
             switch
-            {
-                true =>
-                    // todo:update data in the UI
-                    true,
-                false =>
-                    // todo:also need to update the UI
-                    false,
-                _ => null
-            };
+        {
+            true =>
+                // todo:update data in the UI
+                true,
+            false =>
+                // todo:also need to update the UI
+                false,
+            _ => null
+        };
 
     public async Task<bool> DeleteDataAsync(string id)
     {
@@ -168,7 +126,6 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 // {
 //     PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 // }
-
 
 // not used or not working
 

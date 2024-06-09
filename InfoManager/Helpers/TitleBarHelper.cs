@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
-
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Windows.UI;
 using Windows.UI.ViewManagement;
+using WinRT.Interop;
 
 namespace InfoManager.Helpers;
 
@@ -37,7 +37,9 @@ internal class TitleBarHelper
 
             if (theme == ElementTheme.Default)
             {
-                theme = Application.Current.RequestedTheme == ApplicationTheme.Light ? ElementTheme.Light : ElementTheme.Dark;
+                theme = Application.Current.RequestedTheme == ApplicationTheme.Light
+                    ? ElementTheme.Light
+                    : ElementTheme.Dark;
             }
 
             App.MainWindow.AppWindow.TitleBar.ButtonForegroundColor = theme switch
@@ -70,7 +72,7 @@ internal class TitleBarHelper
 
             App.MainWindow.AppWindow.TitleBar.BackgroundColor = Colors.Transparent;
 
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
             if (hwnd == GetActiveWindow())
             {
                 SendMessage(hwnd, WMACTIVATE, WAINACTIVE, IntPtr.Zero);

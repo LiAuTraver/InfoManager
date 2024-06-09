@@ -2,9 +2,4 @@
 
 namespace InfoManager.ViewModels;
 
-public partial class MainViewModel : ObservableRecipient
-{
-    public MainViewModel()
-    {
-    }
-}
+public class MainViewModel : ObservableRecipient;

@@ -11,13 +11,9 @@ public class SafeStringParseConverter : IValueConverter
     }
     // public event EventHandler<ConversionExceptionEventArgs>? ConversionException;
 
-    public object? Convert(object value, Type targetType, object parameter, string language)
-    {
-        return value.ToString();
-    }
+    public object? Convert(object value, Type targetType, object parameter, string language) => value.ToString();
 
-    public object? ConvertBack(object? value, Type targetType, object parameter, string language)
-    {
+    public object? ConvertBack(object? value, Type targetType, object parameter, string language) =>
         // try
         // {
         //     value
@@ -35,8 +31,7 @@ public class SafeStringParseConverter : IValueConverter
         //     ConversionException?.Invoke(this, new ConversionExceptionEventArgs { Exception = e });
         //     return null;
         // }
-        return value;
-    }
+        value;
 }
 
 public class ConversionExceptionEventArgs : EventArgs

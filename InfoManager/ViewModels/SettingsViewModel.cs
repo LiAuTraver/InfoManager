@@ -1,14 +1,10 @@
 ﻿using System.Reflection;
 using System.Windows.Input;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
 using InfoManager.Contracts.Services;
 using InfoManager.Helpers;
-
 using Microsoft.UI.Xaml;
-
 using Windows.ApplicationModel;
 
 namespace InfoManager.ViewModels;
@@ -18,18 +14,11 @@ public partial class SettingsViewModel : ObservableRecipient
     private const string Uri = "https://github.com/liautraver";
     private readonly IThemeSelectorService _themeSelectorService;
 
-    [ObservableProperty]
-    private ElementTheme _elementTheme;
-
-    [ObservableProperty]
-    private string _versionDescription;
-
     public readonly Uri MyUri = new(Uri);
 
-    public ICommand SwitchThemeCommand
-    {
-        get;
-    }
+    [ObservableProperty] private ElementTheme _elementTheme;
+
+    [ObservableProperty] private string _versionDescription;
 
     public SettingsViewModel(IThemeSelectorService themeSelectorService)
     {
@@ -38,14 +27,21 @@ public partial class SettingsViewModel : ObservableRecipient
         _versionDescription = GetVersionDescription();
 
         SwitchThemeCommand = new RelayCommand<ElementTheme>(
-            async (param) =>
+            async param =>
             {
-                if (ElementTheme != param)
+                if (ElementTheme == param)
                 {
-                    ElementTheme = param;
-                    await _themeSelectorService.SetThemeAsync(param);
+                    return;
                 }
+
+                ElementTheme = param;
+                await _themeSelectorService.SetThemeAsync(param);
             });
+    }
+
+    public ICommand SwitchThemeCommand
+    {
+        get;
     }
 
     private static string GetVersionDescription()
@@ -56,12 +52,15 @@ public partial class SettingsViewModel : ObservableRecipient
         {
             var packageVersion = Package.Current.Id.Version;
 
-            version = new(packageVersion.Major, packageVersion.Minor, packageVersion.Build, packageVersion.Revision);
+            version = new Version(packageVersion.Major, packageVersion.Minor, packageVersion.Build,
+                packageVersion.Revision);
         }
         else
         {
             version = Assembly.GetExecutingAssembly().GetName().Version!;
         }
-        return $"{"AppDisplayName".GetLocalized()} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+
+        return
+            $"{"AppDisplayName".GetLocalized()} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
     }
 }

@@ -1,10 +1,10 @@
 ﻿{
-    "profiles": {
-      "InfoManager (Package)": {
-        "commandName": "MsixPackage"
-      },
-      "InfoManager (Unpackaged)": {
-        "commandName": "Project"
-      }
+  "profiles": {
+    "InfoManager (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "InfoManager (Unpackaged)": {
+      "commandName": "Project"
     }
+  }
 }

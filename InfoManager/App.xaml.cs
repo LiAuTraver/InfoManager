@@ -1,17 +1,15 @@
 ﻿using InfoManager.Activation;
 using InfoManager.Contracts.Services;
-using InfoManager.Core.Contracts.Services;
-using InfoManager.Core.Services;
 using InfoManager.Helpers;
 using InfoManager.Models;
 using InfoManager.Services;
 using InfoManager.ViewModels;
 using InfoManager.Views;
-using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
+using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 
 namespace InfoManager;
 
@@ -23,7 +21,7 @@ public partial class App : Application
     // https://docs.microsoft.com/dotnet/core/extensions/dependency-injection
     // https://docs.microsoft.com/dotnet/core/extensions/configuration
     // https://docs.microsoft.com/dotnet/core/extensions/logging
-// Resharper disable all [disables all inspections]
+    // Resharper disable all [disables all inspections]
     public IHost Host
     {
         get;
@@ -32,7 +30,7 @@ public partial class App : Application
     public static T GetService<T>()
         where T : class
     {
-        if ((App.Current as App)!.Host.Services.GetService(typeof(T)) is not T service)
+        if ((Current as App)!.Host.Services.GetService(typeof(T)) is not T service)
         {
             throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
         }
@@ -92,7 +90,7 @@ public partial class App : Application
                     context.Configuration.GetSection(nameof(LocalSettingsOptions)));
             }).Build();
 
-        App.GetService<IAppNotificationService>().Initialize();
+        GetService<IAppNotificationService>().Initialize();
 
         // UnhandledException += AppUnhandledException;
         //CoreApplication.Exiting += OnExiting;
@@ -126,10 +124,10 @@ public partial class App : Application
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         base.OnLaunched(args);
-        App.GetService<IAppNotificationService>()
+        GetService<IAppNotificationService>()
             .Show(string.Format("AppNotificationSamplePayload".GetLocalized(), AppContext.BaseDirectory));
 
-        await App.GetService<IActivationService>().ActivateAsync(args);
+        await GetService<IActivationService>().ActivateAsync(args);
         // BUG: not working
 
 

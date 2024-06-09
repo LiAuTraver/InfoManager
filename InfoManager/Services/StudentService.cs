@@ -1,32 +1,46 @@
 ﻿using InfoManager.Models;
+using Newtonsoft.Json;
 
 namespace InfoManager.Services;
 
-using Newtonsoft.Json;
-
-// methods part
-public partial class StudentService
+public class StudentService
 {
-    public void AddStudent(Student student)
+    private static readonly string DefaultFilePath = Path.Combine(AppContext.BaseDirectory, "data.json");
+    private static readonly string BackupFilePath = Path.Combine(AppContext.BaseDirectory, "data.bak");
+    private static readonly object FileLock = new();
+    private readonly char _delimiter;
+    private readonly bool _isJson;
+    private readonly List<Student> _students = [];
+
+    public StudentService(string? filePath, char? delimiter)
     {
-        _students.Add(student);
+        _delimiter = delimiter ?? ' ';
+        FilePath = filePath ?? DefaultFilePath;
+        _isJson = false;
     }
 
-    public void DeleteStudent(Student student)
+    public StudentService(string? filePath, bool isJson)
     {
+        _isJson = isJson;
+        FilePath = filePath ?? DefaultFilePath;
+        _delimiter = ' ';
+    }
+
+    public string FilePath
+    {
+        get;
+        private set;
+    }
+
+    public void AddStudent(Student student) => _students.Add(student);
+
+    public void DeleteStudent(Student student) =>
         // remove student from list
         _students.Remove(student);
-    }
 
-    public Student? FindStudent(string id)
-    {
-        return _students.Find(student => student.Id == id);
-    }
+    public Student? FindStudent(string id) => _students.Find(student => student.Id == id);
 
-    public Student? FindStudent(int index)
-    {
-        return _students.Find(student => student.MyIndex == index);
-    }
+    public Student? FindStudent(int index) => _students.Find(student => student.MyIndex == index);
 
     private async Task ProcessStudentsAsync(string? filePath)
     {
@@ -55,10 +69,8 @@ public partial class StudentService
         {
             return await GetGridDataAsyncNotJson(filePath);
         }
-        else
-        {
-            return await GetGridDataAsyncIsJson(filePath);
-        }
+
+        return await GetGridDataAsyncIsJson(filePath);
     }
 
     private async Task<IEnumerable<Student>> GetGridDataAsyncIsJson(string filePath)
@@ -136,8 +148,10 @@ public partial class StudentService
             {
                 SaveDataJson(filePath);
             }
+
             SaveCopyOf(filePath);
         }
+
         await Task.CompletedTask;
     }
 
@@ -147,7 +161,7 @@ public partial class StudentService
         var jsonData = JsonConvert.SerializeObject(_students);
         // lock (FileLock)
         // {
-            File.WriteAllText(filePath, jsonData);
+        File.WriteAllText(filePath, jsonData);
         // }
     }
 
@@ -155,12 +169,12 @@ public partial class StudentService
     {
         // lock (FileLock)
         // {
-            using var streamWriter = new StreamWriter(filePath);
-            streamWriter.WriteLine("ID,Grade,Name");
-            foreach (var student in _students)
-            {
-                streamWriter.WriteLine($"{student.Id},{string.Join(_delimiter, student.Grades)},{student.Name}");
-            }
+        using var streamWriter = new StreamWriter(filePath);
+        streamWriter.WriteLine("ID,Grade,Name");
+        foreach (var student in _students)
+        {
+            streamWriter.WriteLine($"{student.Id},{string.Join(_delimiter, student.Grades)},{student.Name}");
+        }
         // }
     }
 
@@ -189,38 +203,6 @@ public partial class StudentService
         // FIXME: lock is not working
         //File.Copy(BackupFilePath, FilePath, true);
         await GetGridDataAsync(FilePath);
-    }
-}
-
-// ctor and vars part
-public partial class StudentService
-{
-    private readonly char _delimiter;
-    private readonly bool _isJson;
-
-    public string FilePath
-    {
-        get;
-        set;
-    }
-
-    private static readonly string DefaultFilePath = Path.Combine(AppContext.BaseDirectory, "data.json");
-    private static readonly string BackupFilePath = Path.Combine(AppContext.BaseDirectory, "data.bak");
-    private readonly List<Student> _students = [];
-    private static readonly object FileLock = new();
-
-    public StudentService(string? filePath, char? delimiter)
-    {
-        _delimiter = delimiter ?? ' ';
-        FilePath = filePath ?? DefaultFilePath;
-        _isJson = false;
-    }
-
-    public StudentService(string? filePath, bool isJson)
-    {
-        _isJson = isJson;
-        FilePath = filePath ?? DefaultFilePath;
-        _delimiter = ' ';
     }
 }
 

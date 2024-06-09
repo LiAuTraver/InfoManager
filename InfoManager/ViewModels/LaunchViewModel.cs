@@ -2,6 +2,4 @@
 
 namespace InfoManager.ViewModels;
 
-public partial class LaunchViewModel : ObservableRecipient
-{
-}
+public class LaunchViewModel : ObservableRecipient;

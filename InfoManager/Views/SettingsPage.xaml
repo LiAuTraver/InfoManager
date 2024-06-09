@@ -5,7 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:helpers="using:InfoManager.Helpers"
-    xmlns:xaml="using:Microsoft.UI.Xaml" xmlns:viewmodels="using:InfoManager.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+    xmlns:xaml="using:Microsoft.UI.Xaml" xmlns:viewmodels="using:InfoManager.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
@@ -54,27 +55,26 @@
             <TextBlock x:Uid="Settings_About" Style="{ThemeResource SubtitleTextBlockStyle}" />
 
             <StackPanel Margin="{StaticResource XSmallTopMargin}">
-                <TextBlock Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" />
+                <TextBlock Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}"
+                           Style="{ThemeResource BodyTextBlockStyle}" />
 
                 <TextBlock
                     x:Uid="Settings_AboutDescription"
                     Margin="{StaticResource XSmallTopMargin}"
-                    Style="{ThemeResource BodyTextBlockStyle}"/>
+                    Style="{ThemeResource BodyTextBlockStyle}" />
                 <!-- Could not use x:Uid, 
                         need to use x:Bind and ViewModel property, 
                         x:Bind will bind var in this class, 
                         but x:Uid won't.
                 Note: ViewModel is a var declared in `SettingsPage.xaml.cs`
                        which was an instance of `SettingsViewModel` -->
-                <HyperlinkButton 
-                    Content="About Author" 
-                    NavigateUri="{x:Bind ViewModel.MyUri}" 
-                    Margin="{StaticResource SettingsPageHyperlinkButtonMargin}"
-                    />
-                <HyperlinkButton 
-                    x:Uid="SettingsPage_PrivacyTermsLink" 
-                    Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" 
-                    />
+                <HyperlinkButton
+                    Content="About Author"
+                    NavigateUri="{x:Bind ViewModel.MyUri}"
+                    Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                <HyperlinkButton
+                    x:Uid="SettingsPage_PrivacyTermsLink"
+                    Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
             </StackPanel>
         </StackPanel>
     </Grid>

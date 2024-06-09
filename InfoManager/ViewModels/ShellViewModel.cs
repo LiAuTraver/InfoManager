@@ -1,10 +1,7 @@
 ﻿using System.Windows.Input;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
 using InfoManager.Contracts.Services;
-
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -12,8 +9,19 @@ namespace InfoManager.ViewModels;
 
 public partial class ShellViewModel : ObservableRecipient
 {
-    [ObservableProperty]
-    private bool _isBackEnabled;
+    [ObservableProperty] private bool _isBackEnabled;
+
+    public ShellViewModel(INavigationService navigationService)
+    {
+        NavigationService = navigationService;
+        NavigationService.Navigated += OnNavigated;
+
+        MenuFileExitCommand = new RelayCommand(OnMenuFileExit);
+        MenuViewsLaunchCommand = new RelayCommand(OnMenuViewsLaunch);
+        MenuSettingsCommand = new RelayCommand(OnMenuSettings);
+        MenuViewsDataCommand = new RelayCommand(OnMenuViewsData);
+        MenuViewsMainCommand = new RelayCommand(OnMenuViewsMain);
+    }
 
     public ICommand MenuFileExitCommand
     {
@@ -43,18 +51,6 @@ public partial class ShellViewModel : ObservableRecipient
     public INavigationService NavigationService
     {
         get;
-    }
-
-    public ShellViewModel(INavigationService navigationService)
-    {
-        NavigationService = navigationService;
-        NavigationService.Navigated += OnNavigated;
-
-        MenuFileExitCommand = new RelayCommand(OnMenuFileExit);
-        MenuViewsLaunchCommand = new RelayCommand(OnMenuViewsLaunch);
-        MenuSettingsCommand = new RelayCommand(OnMenuSettings);
-        MenuViewsDataCommand = new RelayCommand(OnMenuViewsData);
-        MenuViewsMainCommand = new RelayCommand(OnMenuViewsMain);
     }
 
     private void OnNavigated(object sender, NavigationEventArgs e) => IsBackEnabled = NavigationService.CanGoBack;

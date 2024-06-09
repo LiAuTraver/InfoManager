@@ -20,7 +20,6 @@ public class EnumToBooleanConverter : IValueConverter
         var enumValue = Enum.Parse(typeof(ElementTheme), enumString);
 
         return enumValue.Equals(value);
-
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

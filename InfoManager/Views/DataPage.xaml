@@ -51,22 +51,28 @@
                     IsEnabled="{x:Bind IsEditing, Mode=TwoWay}" />
         </StackPanel>
 
-
         <ToggleSwitch
             Grid.Row="0"
             Grid.Column="3"
             Header="Toggle Mode"
             OffContent="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BoolToSortOrderConverter}}"
             OnContent="{x:Bind IsAscending, Mode=TwoWay, Converter={StaticResource BoolToSortOrderConverter}}"
+            IsEnabled="{x:Bind IsEditing, Mode=OneWay, Converter={StaticResource BooleanNegationConvertor}}"
             Toggled="ToggleAscending"
             IsOn="False"
             VerticalAlignment="Center"
             Margin="10" />
 
         <StackPanel Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" Margin="10">
-            <RadioButton Content="Sort by ID" IsChecked="True" Checked="SwitchSortMode" />
-            <RadioButton Content="Sort by Average" Checked="SwitchSortMode" />
-            <RadioButton Content="Sort by Name" Checked="SwitchSortMode" />
+            <RadioButton Content="Sort by Id" IsChecked="True"
+                         IsEnabled="{x:Bind IsEditing, Mode=OneWay, Converter={StaticResource BooleanNegationConvertor}}"
+                         Checked="SwitchSortMode" />
+            <RadioButton Content="Sort by Average"
+                         IsEnabled="{x:Bind IsEditing, Mode=OneWay, Converter={StaticResource BooleanNegationConvertor}}"
+                         Checked="SwitchSortMode" />
+            <RadioButton Content="Sort by Name"
+                         IsEnabled="{x:Bind IsEditing, Mode=OneWay, Converter={StaticResource BooleanNegationConvertor}}"
+                         Checked="SwitchSortMode" />
         </StackPanel>
 
         <control:DataGrid

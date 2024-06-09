@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 using CommunityToolkit.WinUI.UI.Controls;
 using InfoManager.Models;
 using InfoManager.ViewModels;
@@ -8,13 +9,98 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace InfoManager.Views;
 
-// func part
 public sealed partial class DataPage : INotifyPropertyChanged
 {
-    private void OnPropertyChanged(string propertyName)
+    private object? _cellDataTemp;
+
+    private bool _isAscending = true;
+
+    private bool _isEditing;
+
+    private bool _isModified;
+
+    private string _toggleButtonContent = "Ascending";
+
+    public DataPage()
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        ViewModel = App.GetService<DataViewModel>();
+        IsAscending = true;
+        IsEditing = false;
+        IsModified = false;
+        InitializeComponent();
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
+
+    public bool IsEditing
+    {
+        get => _isEditing;
+        set
+        {
+            if (_isEditing == value)
+            {
+                return;
+            }
+
+            _isEditing = value;
+            OnPropertyChanged(nameof(IsEditing));
+        }
+    }
+
+    public bool IsAscending
+    {
+        get => _isAscending;
+        set
+        {
+            if (_isAscending == value)
+            {
+                return;
+            }
+
+            _isAscending = value;
+            OnPropertyChanged(nameof(IsAscending));
+            ToggleButtonContent = _isAscending ? "Ascending" : "Descending";
+        }
+    }
+
+    public bool IsModified
+    {
+        get => _isModified;
+        private set
+        {
+            if (_isModified == value)
+            {
+                return;
+            }
+
+            _isModified = value;
+            OnPropertyChanged(nameof(IsModified));
+        }
+    }
+
+    public string ToggleButtonContent
+    {
+        get => _toggleButtonContent;
+        set
+        {
+            if (_toggleButtonContent == value)
+            {
+                return;
+            }
+
+            _toggleButtonContent = value;
+            OnPropertyChanged(nameof(ToggleButtonContent));
+        }
+    }
+
+    public DataViewModel ViewModel
+    {
+        get;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     private async void SaveData(object sender, RoutedEventArgs e)
     {
@@ -32,49 +118,46 @@ public sealed partial class DataPage : INotifyPropertyChanged
         switch (result)
         {
             case ContentDialogResult.None:
-                return;
+            return;
             case ContentDialogResult.Primary:
-                await ViewModel.SaveDataToFileAsync(true);
-                IsModified = false;
-                return;
+            await ViewModel.SaveDataToFileAsync(true);
+            IsModified = false;
+            return;
             case ContentDialogResult.Secondary:
-                await ViewModel.SaveDataToFileAsync(false);
-                IsModified = false;
-                return;
+            await ViewModel.SaveDataToFileAsync(false);
+            IsModified = false;
+            return;
             default:
-                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
-                return;
+            await SimpleDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
+            return;
         }
     }
 
-    private void SwitchSortMode(object sender, RoutedEventArgs e)
+    private async void SwitchSortMode(object sender, RoutedEventArgs e)
     {
-        if ((sender as RadioButton)?.Content is string content)
+        // content is `Sort By $(propertyName)`, we drop the `Sort By ` part
+        if ((sender as RadioButton)?.Content is not string content)
         {
-            _selectedSortOption = content;
+            await SimpleDialog(@"Oops! Something went wrong. You shouldn't be here.", "Error", sender);
         }
+        else
+        {
+            const string prefix = "Sort by ";
+            if (!content.StartsWith(prefix))
+            {
+                await SimpleDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
+                return;
+            }
 
-        UpdateSort();
+            var propertyName = content[prefix.Length..];
+            UpdateSort(propertyName);
+        }
     }
 
-    private async void UpdateSort()
+    private async void UpdateSort(string propertyName = "")
     {
-        switch (_selectedSortOption)
-        {
-            case "Sort by ID":
-                ViewModel.SortByIdCommand.Execute(IsAscending);
-                return;
-            case "Sort by Average":
-                ViewModel.SortByAverageCommand.Execute(IsAscending);
-                return;
-            case "Sort by Name":
-                ViewModel.SortByNameCommand.Execute(IsAscending);
-                return;
-            default:
-                // Do nothing, emit a warning
-                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", null);
-                return;
-        }
+        ViewModel.SortData(propertyName, IsAscending);
+        await Task.CompletedTask; // placeholder for future async operations (?)
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -83,17 +166,18 @@ public sealed partial class DataPage : INotifyPropertyChanged
         switch (e.Parameter)
         {
             case null:
-                return;
+            return;
             case string newFilePath:
-                if (newFilePath != @"-1")
-                {
-                    ViewModel.OnNavigatedTo(newFilePath);
-                    return;
-                }
-                goto default;
-            default:
-                _ = SimpleContentDialog("File path is invalid.", "Error", null);
+            if (newFilePath != @"-1")
+            {
+                ViewModel.OnNavigatedTo(newFilePath);
                 return;
+            }
+
+            goto default;
+            default:
+            _ = SimpleDialog("File path is invalid.", "Error", null);
+            return;
         }
     }
 
@@ -104,100 +188,96 @@ public sealed partial class DataPage : INotifyPropertyChanged
         UpdateSort();
     }
 
-    private void ToggleEditing(object sender, RoutedEventArgs e)
-    {
-        IsEditing = !IsEditing;
-    }
+    private void ToggleEditing(object sender, RoutedEventArgs e) => IsEditing = !IsEditing;
 
-    private async void AddData(object sender, RoutedEventArgs e)
-    {
-        await AddDataDialog(sender);
-    }
+    private async void AddData(object sender, RoutedEventArgs e) => await AddDataDialog(sender);
 
     private async Task AddDataDialog(object sender)
     {
         var idBox = new TextBox { Header = "ID" };
         var nameBox = new TextBox { Header = "Name" };
         var gradeStringBox = new TextBox { Header = "Grade" };
-
-        var stackPanel = new StackPanel
-        {
-            Children =
-            {
-                idBox,
-                nameBox,
-                gradeStringBox
-            }
-        };
-
-        var dialog = new ContentDialog
+        switch (await new ContentDialog
         {
             Title = "Add",
-            Content = stackPanel,
+            Content = new StackPanel
+            {
+                Children =
+                        {
+                            idBox,
+                            nameBox,
+                            gradeStringBox
+                        }
+            },
             CloseButtonText = "Cancel",
             PrimaryButtonText = "Add",
             DefaultButton = ContentDialogButton.Primary,
             XamlRoot = (sender as FrameworkElement)?.XamlRoot
-        };
-
-        switch (await dialog.ShowAsync())
+        }.ShowAsync())
         {
             case ContentDialogResult.None:
-                return;
+            return;
             case ContentDialogResult.Primary:
-                // Use the Text property of the TextBoxes to get the input values
-                if (idBox.Text is not { } id)
-                {
-                    await SimpleContentDialog("ID cannot be empty.", "Warning", sender);
-                    return;
-                }
-
-                if (nameBox.Text is not { } name)
-                {
-                    await SimpleContentDialog("Name cannot be empty.", "Warning", sender);
-                    return;
-                }
-
-                if (gradeStringBox.Text is not { } gradeString)
-                {
-                    await SimpleContentDialog("Grade cannot be empty.", "Warning", sender);
-                    return;
-                }
-
-                if (await ViewModel.AddDataAsync(id, name, gradeString) is not true)
-                {
-                    await SimpleContentDialog("Student with ID \"" + id + "\" already exists.", "Error", sender);
-                    return;
-                }
-
-                // successfully added student
-                IsModified = true;
+            // Use the Text property of the TextBoxes to get the input values
+            if (idBox.Text is not { } id)
+            {
+                await SimpleDialog("ID cannot be empty.", "Warning", sender);
                 return;
+            }
+
+            if (nameBox.Text is not { } name)
+            {
+                await SimpleDialog("Name cannot be empty.", "Warning", sender);
+                return;
+            }
+
+            if (gradeStringBox.Text is not { } gradeString)
+            {
+                await SimpleDialog("Grade cannot be empty.", "Warning", this);
+                return;
+            }
+
+            if (await ViewModel.AddDataAsync(id, name, gradeString) is not true)
+            {
+                await SimpleDialog("Student with ID \"" + id + "\" already exists.", "Error", this);
+                return;
+            }
+
+            // successfully added student
+            IsModified = true;
+            return;
             case ContentDialogResult.Secondary:
             default:
-                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
-                return;
+            await SimpleDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
+            return;
         }
     }
 
-    private static async Task SimpleContentDialog(string message, string warningLevel, object? sender)
+    private static async Task SimpleDialog(string message, string warningLevel, object? sender)
     {
-        sender ??= App.MainWindow.Content;
-        var dialog = new ContentDialog
+        try
         {
-            Title = warningLevel,
-            Content = message,
-            CloseButtonText = "Ok",
-            DefaultButton = ContentDialogButton.Close,
-            XamlRoot = ((FrameworkElement)sender).XamlRoot
-        };
-        await dialog.ShowAsync();
+            await new ContentDialog
+            {
+                Title = warningLevel,
+                Content = message,
+                CloseButtonText = "Ok",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = (sender as FrameworkElement)?.XamlRoot
+            }.ShowAsync();
+        } catch (NullReferenceException e)
+        {
+            Console.WriteLine(@"Caught an NullReferenceException: " + e.Message);
+        } catch (COMException e)
+        {
+            Console.WriteLine(@"Caught an COMException: " + e.Message);
+        } catch (Exception e)
+        {
+            Console.WriteLine(@"Caught an Exception: " + e.Message);
+        }
     }
 
-    private async void DeleteStudent(object sender, RoutedEventArgs e)
-    {
-        await DeleteStudentDialog(sender);
-    }
+    private async void DeleteStudent(object sender, RoutedEventArgs e) => await DeleteStudentDialog(sender);
 
     private async Task DeleteStudentDialog(object sender)
     {
@@ -227,19 +307,19 @@ public sealed partial class DataPage : INotifyPropertyChanged
 
         if (textBox.Text is null)
         {
-            await SimpleContentDialog("Student ID cannot be empty.", "Warning", sender);
+            await SimpleDialog("Student ID cannot be empty.", "Warning", sender);
             return;
         }
 
         if (await ViewModel.DeleteDataAsync(textBox.Text) is not true)
         {
             // show error message: Student not found
-            await SimpleContentDialog("Student with ID \"" + textBox.Text + "\" not found.", "Error", sender);
+            await SimpleDialog("Student with ID \"" + textBox.Text + "\" not found.", "Error", sender);
             return;
         }
 
         // successfully deleted student
-        await SimpleContentDialog("Successfully deleted Student with ID \"" + textBox.Text + "\".", "Info", sender);
+        await SimpleDialog("Successfully deleted Student with ID \"" + textBox.Text + "\".", "Info", sender);
         IsModified = true;
     }
 
@@ -252,10 +332,8 @@ public sealed partial class DataPage : INotifyPropertyChanged
             _ => string.Empty
         };
 
-    private void CellDataOriginal(object? sender, DataGridBeginningEditEventArgs e)
-    {
+    private void CellDataOriginal(object? sender, DataGridBeginningEditEventArgs e) =>
         _cellDataTemp = e.Row.DataContext as Student;
-    }
 
     // this event execute before the binding data is updated,
     // so we can get the original data and handle the exception at UI level.
@@ -270,19 +348,18 @@ public sealed partial class DataPage : INotifyPropertyChanged
             switch (header)
             {
                 case "Grades":
-                    _ = dataString
-                        ?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => double.Parse(s.Trim()))
-                        .ToList();
-                    IsModified = true; // if parse failed, this line won't be executed
-                    break;
+                _ = dataString
+                    ?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => double.Parse(s.Trim()))
+                    .ToList();
+                IsModified = true; // if parse failed, this line won't be executed
+                break;
                 case "ID":
-                    _ = double.Parse(dataString?.Trim() ?? string.Empty);
-                    IsModified = true;
-                    break;
+                _ = double.Parse(dataString?.Trim() ?? string.Empty);
+                IsModified = true;
+                break;
             }
-        }
-        catch (Exception exception)
+        } catch (Exception exception)
         {
             // e.Cancel = true;
 
@@ -292,7 +369,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
             // which means multiple dialog boxes are shown at the same time (why?? dunno)
             //
             // also here use a `_` to ignore the return value to suppress IDE and compiler warnings
-            _ = SimpleContentDialog(exception.Message, "Error", sender);
+            _ = SimpleDialog(exception.Message, "Error", sender);
             (e.EditingElement as TextBox)!.Text = RestoreData(e.Column.Header?.ToString() ?? string.Empty);
             // but I need to use that value to determine the result of the dialog
             // NO WAY! failed. same error as above
@@ -314,101 +391,6 @@ public sealed partial class DataPage : INotifyPropertyChanged
         }
     }
 }
-
-// member variables and ctor part
-public sealed partial class DataPage : INotifyPropertyChanged
-{
-    public DataPage()
-    {
-        ViewModel = App.GetService<DataViewModel>();
-        IsAscending = true;
-        IsEditing = false;
-        IsModified = false;
-        this.InitializeComponent();
-        this.NavigationCacheMode = NavigationCacheMode.Enabled;
-    }
-
-    private object? _cellDataTemp;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private bool _isEditing;
-
-    public bool IsEditing
-    {
-        get => _isEditing;
-        set
-        {
-            if (_isEditing == value)
-            {
-                return;
-            }
-
-            _isEditing = value;
-            OnPropertyChanged(nameof(IsEditing));
-        }
-    }
-
-    private string _selectedSortOption = "Sort by ID";
-
-    private bool _isAscending = true;
-
-    public bool IsAscending
-    {
-        get => _isAscending;
-        set
-        {
-            if (_isAscending == value)
-            {
-                return;
-            }
-
-            _isAscending = value;
-            OnPropertyChanged(nameof(IsAscending));
-            ToggleButtonContent = _isAscending ? "Ascending" : "Descending";
-        }
-    }
-
-    private bool _isModified;
-
-    public bool IsModified
-    {
-        get => _isModified;
-        private set
-        {
-            if (_isModified == value)
-            {
-                return;
-            }
-
-            _isModified = value;
-            OnPropertyChanged(nameof(IsModified));
-        }
-    }
-
-    private string _toggleButtonContent = "Ascending";
-
-    public string ToggleButtonContent
-    {
-        get => _toggleButtonContent;
-        set
-        {
-            if (_toggleButtonContent == value)
-            {
-                return;
-            }
-
-            _toggleButtonContent = value;
-            OnPropertyChanged(nameof(ToggleButtonContent));
-        }
-    }
-
-    public DataViewModel ViewModel
-    {
-        get;
-    }
-}
-
 
 // private async void CellDataChanged(object? sender, DataGridCellEditEndedEventArgs e)
 // {

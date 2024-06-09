@@ -1,7 +1,6 @@
 ﻿using InfoManager.Activation;
 using InfoManager.Contracts.Services;
 using InfoManager.Views;
-
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -13,7 +12,7 @@ public class ActivationService(
     IThemeSelectorService themeSelectorService)
     : IActivationService
 {
-    private UIElement? _shell = null;
+    private UIElement? _shell;
 
     public async Task ActivateAsync(object activationArgs)
     {

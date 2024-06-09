@@ -1,22 +1,16 @@
-﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-#pragma warning disable CS0660, CS0661
-using System.ComponentModel;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 namespace InfoManager.Models;
 
-public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Student>
+public sealed class Student
+    : ICloneable, IEquatable<Student>
+// , INotifyPropertyChanged
 {
-    private static int Index
-    {
-        get;
-        set;
-    }
+    private List<double> _grades;
 
-    public int MyIndex
-    {
-        get;
-    }
+    private string _gradesString;
 
     [JsonConstructor] // needed for deserialization otherwise it will throw an error because there are two ctors which take 3 parameters
     public Student(string name, string id, List<double> grades)
@@ -37,6 +31,17 @@ public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Stu
         MyIndex = Index;
     }
 
+    private static int Index
+    {
+        get;
+        set;
+    }
+
+    public int MyIndex
+    {
+        get;
+    }
+
     public string Name
     {
         get;
@@ -49,8 +54,6 @@ public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Stu
         set;
     }
 
-    private List<double> _grades;
-
     public List<double> Grades
     {
         get => _grades;
@@ -60,8 +63,6 @@ public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Stu
             GradesString = string.Join(", ", _grades);
         }
     }
-
-    private string _gradesString;
 
     public string GradesString
     {
@@ -75,43 +76,11 @@ public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Stu
         }
     }
 
-
     public double Average => Grades.Any() ? Grades.Average() : 0;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    // private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    // {
-    //     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    // }
-
-    // public void UpdateInfo(Student? student)
-    // {
-    //     if (student == null)
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (student != this)
-    //     {
-    //         Name = student.Name;
-    //         Id = student.Id;
-    //         Grades = student.Grades;
-    //     }
-    //
-    //     // dunno whether it's redundant or not
-    //     GradesString = string.Join(", ", Grades);
-    // }
-
-    public object Clone()
-    {
+    public object Clone() =>
         // deep copy
-        return new Student(Name, Id, Grades.ToList());
-    }
-
-    public static bool operator ==(Student? left, Student? right) => Equals(left, right);
-
-    public static bool operator !=(Student? left, Student? right) => !(left == right);
+        new Student(Name, Id, Grades.ToList());
 
     public bool Equals(Student? other)
     {
@@ -129,10 +98,38 @@ public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Stu
                Name == other.Name && Id == other.Id;
     }
 
-#pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
-    public override bool Equals(object? obj)
-#pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
-    {
-        return Equals(obj is Student student ? student : null);
-    }
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || (obj is Student other && Equals(other));
+
+    // ReSharper disable once BaseObjectGetHashCodeCallInGetHashCode
+    public override int GetHashCode() => base.GetHashCode();
+
+    public static bool operator ==(Student? left, Student? right) => Equals(left, right);
+
+    public static bool operator !=(Student? left, Student? right) => !(left == right);
 }
+
+
+// public event PropertyChangedEventHandler? PropertyChanged;
+
+// private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+// {
+//     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+// }
+
+// public void UpdateInfo(Student? student)
+// {
+//     if (student == null)
+//     {
+//         return;
+//     }
+//
+//     if (student != this)
+//     {
+//         Name = student.Name;
+//         Id = student.Id;
+//         Grades = student.Grades;
+//     }
+//
+//     // dunno whether it's redundant or not
+//     GradesString = string.Join(", ", Grades);
+// }

@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-
 using InfoManager.Contracts.Services;
 using InfoManager.Contracts.ViewModels;
 using InfoManager.Helpers;
-
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -13,8 +11,8 @@ namespace InfoManager.Services;
 // https://github.com/microsoft/TemplateStudio/blob/main/docs/WinUI/navigation.md
 public class NavigationService(IPageService pageService) : INavigationService
 {
-    private object? _lastParameterUsed;
     private Frame? _frame;
+    private object? _lastParameterUsed;
 
     public event NavigatedEventHandler? Navigated;
 
@@ -22,11 +20,13 @@ public class NavigationService(IPageService pageService) : INavigationService
     {
         get
         {
-            if (_frame == null)
+            if (_frame != null)
             {
-                _frame = App.MainWindow.Content as Frame;
-                RegisterFrameEvents();
+                return _frame;
             }
+
+            _frame = App.MainWindow.Content as Frame;
+            RegisterFrameEvents();
 
             return _frame;
         }
@@ -41,22 +41,6 @@ public class NavigationService(IPageService pageService) : INavigationService
 
     [MemberNotNullWhen(true, nameof(Frame), nameof(_frame))]
     public bool CanGoBack => Frame != null && Frame.CanGoBack;
-
-    private void RegisterFrameEvents()
-    {
-        if (_frame != null)
-        {
-            _frame.Navigated += OnNavigated;
-        }
-    }
-
-    private void UnregisterFrameEvents()
-    {
-        if (_frame != null)
-        {
-            _frame.Navigated -= OnNavigated;
-        }
-    }
 
     public bool GoBack()
     {
@@ -73,7 +57,6 @@ public class NavigationService(IPageService pageService) : INavigationService
         }
 
         return true;
-
     }
 
     public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
@@ -89,17 +72,34 @@ public class NavigationService(IPageService pageService) : INavigationService
         _frame.Tag = clearNavigation;
         var vmBeforeNavigation = _frame.GetPageViewModel();
         var navigated = _frame.Navigate(pageType, parameter);
-        if (navigated)
+        if (!navigated)
         {
-            _lastParameterUsed = parameter;
-            if (vmBeforeNavigation is INavigationAware navigationAware)
-            {
-                navigationAware.OnNavigatedFrom();
-            }
+            return navigated;
+        }
+
+        _lastParameterUsed = parameter;
+        if (vmBeforeNavigation is INavigationAware navigationAware)
+        {
+            navigationAware.OnNavigatedFrom();
         }
 
         return navigated;
+    }
 
+    private void RegisterFrameEvents()
+    {
+        if (_frame != null)
+        {
+            _frame.Navigated += OnNavigated;
+        }
+    }
+
+    private void UnregisterFrameEvents()
+    {
+        if (_frame != null)
+        {
+            _frame.Navigated -= OnNavigated;
+        }
     }
 
     private void OnNavigated(object sender, NavigationEventArgs e)

@@ -1,6 +1,5 @@
 ﻿using InfoManager.Contracts.Services;
 using InfoManager.Helpers;
-
 using Microsoft.UI.Xaml;
 
 namespace InfoManager.Services;
@@ -9,7 +8,11 @@ public class ThemeSelectorService(ILocalSettingsService localSettingsService) : 
 {
     private const string SettingsKey = "AppBackgroundRequestedTheme";
 
-    public ElementTheme Theme { get; set; } = ElementTheme.Default;
+    public ElementTheme Theme
+    {
+        get;
+        set;
+    } = ElementTheme.Default;
 
     public async Task InitializeAsync()
     {
@@ -41,16 +44,9 @@ public class ThemeSelectorService(ILocalSettingsService localSettingsService) : 
     {
         var themeName = await localSettingsService.ReadSettingAsync<string>(SettingsKey);
 
-        if (Enum.TryParse(themeName, out ElementTheme cacheTheme))
-        {
-            return cacheTheme;
-        }
-
-        return ElementTheme.Default;
+        return Enum.TryParse(themeName, out ElementTheme cacheTheme) ? cacheTheme : ElementTheme.Default;
     }
 
-    private async Task SaveThemeInSettingsAsync(ElementTheme theme)
-    {
+    private async Task SaveThemeInSettingsAsync(ElementTheme theme) =>
         await localSettingsService.SaveSettingAsync(SettingsKey, theme.ToString());
-    }
 }

@@ -15,8 +15,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" x:Name="AppTitleBar">
-            <Image Source="/Assets/WindowIcon.ico" HorizontalAlignment="Left" Width="16" Height="16" Margin="8,0"/>
-            <TextBlock x:Name="AppTitleBarText" VerticalAlignment="Center" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Margin="32, 0, 0, 0"/>
+            <Image Source="/Assets/WindowIcon.ico" HorizontalAlignment="Left" Width="16" Height="16" Margin="8,0" />
+            <TextBlock x:Name="AppTitleBarText" VerticalAlignment="Center" TextWrapping="NoWrap"
+                       Style="{StaticResource CaptionTextBlockStyle}" Margin="32, 0, 0, 0" />
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -33,9 +34,12 @@
                 </MenuBarItem>
                 <MenuBarItem x:Uid="ShellMenuBarItem_Views">
                     <MenuBarItem.Items>
-                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Main" Command="{x:Bind ViewModel.MenuViewsMainCommand}" />
-                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Data" Command="{x:Bind ViewModel.MenuViewsDataCommand}" />
-                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Launch" Command="{x:Bind ViewModel.MenuViewsLaunchCommand}" />
+                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Main"
+                                        Command="{x:Bind ViewModel.MenuViewsMainCommand}" />
+                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Data"
+                                        Command="{x:Bind ViewModel.MenuViewsDataCommand}" />
+                        <MenuFlyoutItem x:Uid="ShellMenuItem_Views_Launch"
+                                        Command="{x:Bind ViewModel.MenuViewsLaunchCommand}" />
                     </MenuBarItem.Items>
                 </MenuBarItem>
             </MenuBar>
@@ -46,10 +50,10 @@
                           Command="{x:Bind ViewModel.MenuSettingsCommand}">
                 <AnimatedIcon x:Name="ShellMenuBarSettingsButtonIcon">
                     <AnimatedIcon.Source>
-                        <animatedvisuals:AnimatedSettingsVisualSource/>
+                        <animatedvisuals:AnimatedSettingsVisualSource />
                     </AnimatedIcon.Source>
                     <AnimatedIcon.FallbackIconSource>
-                        <FontIconSource FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE713;"/>
+                        <FontIconSource FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE713;" />
                     </AnimatedIcon.FallbackIconSource>
                 </AnimatedIcon>
             </AppBarButton>

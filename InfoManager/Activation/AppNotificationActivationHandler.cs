@@ -13,10 +13,8 @@ public class AppNotificationActivationHandler(
     private readonly INavigationService _navigationService = navigationService;
     private readonly IAppNotificationService _notificationService = notificationService;
 
-    protected override bool CanHandleInternal(LaunchActivatedEventArgs args)
-    {
-        return AppInstance.GetCurrent().GetActivatedEventArgs()?.Kind == ExtendedActivationKind.AppNotification;
-    }
+    protected override bool CanHandleInternal(LaunchActivatedEventArgs args) =>
+        AppInstance.GetCurrent().GetActivatedEventArgs()?.Kind == ExtendedActivationKind.AppNotification;
 
     protected async override Task HandleInternalAsync(LaunchActivatedEventArgs args)
     {
