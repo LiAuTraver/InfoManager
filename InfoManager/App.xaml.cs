@@ -1,4 +1,5 @@
-﻿using InfoManager.Activation;
+﻿using Windows.ApplicationModel.Core;
+using InfoManager.Activation;
 using InfoManager.Contracts.Services;
 using InfoManager.Core.Contracts.Services;
 using InfoManager.Core.Services;
@@ -13,6 +14,7 @@ using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace InfoManager;
@@ -93,13 +95,33 @@ public partial class App : Application
 
         App.GetService<IAppNotificationService>().Initialize();
 
-        UnhandledException += App_UnhandledException;
+        // UnhandledException += AppUnhandledException;
+        //CoreApplication.Exiting += OnExiting;
     }
 
-    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    //private async void OnExiting(object sender, object e)
+    //{
+    //    if (MainWindow.Content is Frame { Content: Page { DataContext: DataViewModel viewModel } })
+    //    {
+    //        var testDialog = new ContentDialog
+    //        {
+    //            Title = "Unsaved changes",
+    //            Content = "You have unsaved changes. Do you want to save them?",
+    //            PrimaryButtonText = "Save",
+    //            CloseButtonText = "Don't Save"
+    //        };
+    //        var result = await testDialog.ShowAsync();
+    //        if (result == ContentDialogResult.Primary)
+    //        {
+    //            // await viewModel.SaveDataToFileAsync(true);
+
+    //        }
+
+    //    }
+    //}
+    private void AppUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         // TODO: Log and handle exceptions as appropriate.
-        // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)

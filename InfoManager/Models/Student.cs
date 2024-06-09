@@ -3,10 +3,10 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
-namespace InfoManager.Services;
+namespace InfoManager.Models;
 
 
-public sealed class Student : INotifyPropertyChanged, ICloneable
+public sealed class Student : INotifyPropertyChanged, ICloneable, IEquatable<Student>
 {
     private static int Index
     {
@@ -19,7 +19,7 @@ public sealed class Student : INotifyPropertyChanged, ICloneable
         get;
     }
 
-    [JsonConstructor]
+    [JsonConstructor] // needed for deserialization otherwise it will throw an error because there are two ctors which take 3 parameters
     public Student(string name, string id, List<double> grades)
     {
         Name = name;
@@ -116,4 +116,22 @@ public sealed class Student : INotifyPropertyChanged, ICloneable
         // deep copy
         return new Student(Name, Id, Grades.ToList());
     }
+
+    public static bool operator ==(Student? left, Student? right) => Equals(left, right);
+
+    public static bool operator !=(Student? left, Student? right) => !(left == right);
+
+    public bool Equals(Student? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+
+        return _grades.Equals(other._grades) && _gradesString == other._gradesString && MyIndex == other.MyIndex && Name == other.Name && Id == other.Id;
+    }
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is Student other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine(_grades, _gradesString, MyIndex, Name, Id);
 }

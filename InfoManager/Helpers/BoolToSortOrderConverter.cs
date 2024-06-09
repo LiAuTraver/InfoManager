@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Data;
 
-namespace InfoManager.Services;
+namespace InfoManager.Helpers;
 
 public class BoolToSortOrderConverter : IValueConverter
 {

@@ -13,7 +13,7 @@ namespace InfoManager.ViewModels;
 public partial class ShellViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    private bool isBackEnabled;
+    private bool _isBackEnabled;
 
     public ICommand MenuFileExitCommand
     {

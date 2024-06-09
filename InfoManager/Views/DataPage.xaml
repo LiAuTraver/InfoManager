@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:InfoManager.ViewModels"
     xmlns:control="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:services="using:InfoManager.Services"
     xmlns:helpers="using:InfoManager.Helpers"
     mc:Ignorable="d">
 
@@ -14,8 +13,9 @@
         <viewmodels:DataViewModel />
     </Page.DataContext>
     <Page.Resources>
-        <services:BoolToSortOrderConverter x:Key="BoolToSortOrderConverter" />
+        <helpers:BoolToSortOrderConverter x:Key="BoolToSortOrderConverter" />
         <helpers:BooleanNegationConvertor x:Key="BooleanNegationConvertor" />
+        <!-- <helpers:SafeStringParseConverter x:Key="SafeStringParseConverter" /> -->
     </Page.Resources>
 
     <Grid>
@@ -45,7 +45,7 @@
             VerticalAlignment="Center"
             HorizontalAlignment="Center" />
         <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10">
-            <Button HorizontalAlignment="Center" Content="Add" Margin="5" Click="AddStudent"
+            <Button HorizontalAlignment="Center" Content="Add" Margin="5" Click="AddData"
                     IsEnabled="{x:Bind IsEditing, Mode=TwoWay}" />
             <Button HorizontalAlignment="Center" Content="Delete" Margin="5" Click="DeleteStudent"
                     IsEnabled="{x:Bind IsEditing, Mode=TwoWay}" />
@@ -76,14 +76,17 @@
             ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
             AutoGenerateColumns="False"
             CanUserSortColumns="True"
-            IsReadOnly="{x:Bind IsEditing, Mode=TwoWay, Converter={StaticResource BooleanNegationConvertor}}">
+            IsReadOnly="{x:Bind IsEditing, Mode=TwoWay, Converter={StaticResource BooleanNegationConvertor}}"
+            CellEditEnded="CellDataChanged">
+            <!-- BeginningEdit="CellDataTemp"> -->
             <!-- ^^^ Bind IsReadOnly to !IsEditing using the converter ^^^ -->
+
             <control:DataGrid.Columns>
                 <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                 <!-- ReSharper disable Xaml.ConstructorWarning -->
-                <control:DataGridTextColumn Header="ID" Binding="{Binding Id,Mode=TwoWay}" />
-                <control:DataGridTextColumn Header="Name" Binding="{Binding Name,Mode=TwoWay}" />
-                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString,Mode=TwoWay}" />
+                <control:DataGridTextColumn Header="ID" Binding="{Binding Id,Mode=OneWay}" />
+                <control:DataGridTextColumn Header="Name" Binding="{Binding Name,Mode=OneWay}" />
+                <control:DataGridTextColumn Header="Grades" Binding="{Binding GradesString,Mode=OneWay}" />
                 <control:DataGridTextColumn Header="Average" Binding="{Binding Average,Mode=OneWay}" />
                 <!-- ReSharper restore Xaml.ConstructorWarning -->
                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->

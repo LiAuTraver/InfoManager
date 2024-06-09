@@ -1,9 +1,11 @@
-﻿namespace InfoManager.Services;
+﻿using InfoManager.Models;
+
+namespace InfoManager.Services;
 
 using Newtonsoft.Json;
 
 // methods part
-public partial class Students
+public partial class StudentService
 {
     public void AddStudent(Student student)
     {
@@ -21,6 +23,11 @@ public partial class Students
         return _students.Find(student => student.Id == id);
     }
 
+    public Student? FindStudent(int index)
+    {
+        return _students.Find(student => student.MyIndex == index);
+    }
+
     private async Task ProcessStudentsAsync(string? filePath)
     {
         filePath ??= FilePath;
@@ -32,9 +39,9 @@ public partial class Students
         }
     }
 
-    public static async Task<Students> CreateAsync(string? filePath, char? delimiter)
+    public static async Task<StudentService> CreateAsync(string? filePath, char? delimiter)
     {
-        var students = new Students(filePath, delimiter);
+        var students = new StudentService(filePath, delimiter);
         await students.ProcessStudentsAsync(null);
         return students;
     }
@@ -126,10 +133,28 @@ public partial class Students
             await streamWriter.WriteLineAsync($"{student.Id},{string.Join(_delimiter, student.Grades)},{student.Name}");
         }
     }
+
+    public bool? IsStudentInfoChanged(Student student)
+    {
+        var originalStudent = FindStudent(student.MyIndex);
+        if (originalStudent is null)
+        {
+            return null;
+        }
+
+        if (originalStudent == student)
+        {
+            return false;
+        }
+
+        var index = _students.FindIndex(s => s.MyIndex == student.MyIndex);
+        _students[index] = student;
+        return true;
+    }
 }
 
 // ctor and vars part
-public partial class Students
+public partial class StudentService
 {
     private readonly char _delimiter;
     private readonly bool _isJson;
@@ -143,7 +168,7 @@ public partial class Students
     private const string DefaultFilePath = @"M:\Coding\WinRT\data.json";
     private readonly List<Student> _students = [];
 
-    public Students(string? filePath, char? delimiter)
+    public StudentService(string? filePath, char? delimiter)
     {
         _delimiter = delimiter ?? ' ';
         FilePath = filePath ?? DefaultFilePath;
@@ -154,7 +179,7 @@ public partial class Students
         }
     }
 
-    public Students(string? filePath, bool isJson)
+    public StudentService(string? filePath, bool isJson)
     {
         _isJson = isJson;
         FilePath = filePath ?? DefaultFilePath;
@@ -165,3 +190,22 @@ public partial class Students
         }
     }
 }
+
+// WRONG: in code below, originalStudent is a local reference to the student object in _students,
+// so changing originalStudent will not change the student object in _students
+// it will only change the local reference to that new student object
+
+// if(FindStudent(student.MyIndex) is not { } originalStudent)
+// {
+//     // means student is not found; shouldn't happen
+//     Console.WriteLine(@"Oops! You Shouldn't be here.");
+//     return null;
+// }
+//
+// if (student == originalStudent)
+// {
+//     return false;
+// }
+// // update student info
+// originalStudent = student.Clone() as Student;
+// return true;

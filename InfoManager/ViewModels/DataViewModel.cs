@@ -2,15 +2,18 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using InfoManager.Models;
 using InfoManager.Services;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using PropertyChangedEventArgs = ABI.System.ComponentModel.PropertyChangedEventArgs;
 
 namespace InfoManager.ViewModels;
 
 public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
 {
-    private readonly Students _students = new(null, true);
-    private readonly Students _previousStudents = new(null, true);
+    private readonly StudentService _studentService = new(null, true);
+    private readonly StudentService _previousStudentService = new(null, true);
 
     public ObservableCollection<Student> Source
     {
@@ -46,7 +49,7 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
             return;
         }
 
-        var data = await _students.GetGridDataAsync(newFilePath);
+        var data = await _studentService.GetGridDataAsync(newFilePath);
         if (data is null)
         {
             return;
@@ -103,34 +106,19 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         UpdateSource(sortedData, isAscending);
     }
 
-    private async void DataPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        if (sender is not Student student)
-        {
-            return;
-        }
-
-        var originalStudent = Source.FirstOrDefault(s => s.MyIndex == student.MyIndex);
-        if (originalStudent == null)
-        {
-            // handle property change
-            await AddDataAsync(student);
-            return;
-        }
-
-        originalStudent.UpdateInfo(student);
-    }
-
+    // ReSharper disable MemberCanBePrivate.Global
     public async Task<bool> AddDataAsync(Student pendingAppendStudent)
+    // ReSharper restore MemberCanBePrivate.Global
     {
-        _students.AddStudent(pendingAppendStudent);
+        _studentService.AddStudent(pendingAppendStudent);
         Source.Add(pendingAppendStudent); // source must be called to update the UI
         await Task.CompletedTask;
         return true;
     }
+
     public async Task<bool> AddDataAsync(string id, string name, string grades)
     {
-        if(_students.FindStudent(id) is not null)
+        if (_studentService.FindStudent(id) is not null)
         {
             return false;
         }
@@ -138,14 +126,27 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
         return await AddDataAsync(new Student(id, name, grades));
     }
 
+    public bool? IsDataChanged(Student student)
+        => _studentService.IsStudentInfoChanged(student)
+            switch
+        {
+            true =>
+                // todo:update data in the UI
+                true,
+            false =>
+                // todo:also need to update the UI
+                false,
+            _ => null
+        };
+
     public async Task<bool> DeleteDataAsync(string id)
     {
-        if (_students.FindStudent(id) is not { } pendingDroppedStudent)
+        if (_studentService.FindStudent(id) is not { } pendingDroppedStudent)
         {
             return false;
         }
 
-        _students.DeleteStudent(pendingDroppedStudent);
+        _studentService.DeleteStudent(pendingDroppedStudent);
         Source.Remove(pendingDroppedStudent);
         await Task.CompletedTask;
         return true;
@@ -155,18 +156,52 @@ public partial class DataViewModel : ObservableRecipient, INotifyPropertyChanged
     {
         if (isOverwrite is not true)
         {
-            await _previousStudents.SaveStudentsAsync(null);
+            await _previousStudentService.SaveStudentsAsync(null);
         }
         else
         {
-            await _students.SaveStudentsAsync(null);
+            await _studentService.SaveStudentsAsync(null);
         }
     }
-
-    // inherited from ObservableRecipient, no need to implement
-    // public event PropertyChangedEventHandler? PropertyChanged;
-    // protected virtual void OnPropertyChanged(string propertyName)
-    // {
-    //     PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
-    // }
 }
+// inherited from ObservableRecipient, no need to implement
+// public event PropertyChangedEventHandler? PropertyChanged;
+// protected virtual void OnPropertyChanged(string propertyName)
+// {
+//     PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+// }
+
+
+// not used or not working
+
+//     public async Task ConfirmBeforeClosing(NavigatingCancelEventArgs e)
+// {
+//     var warningDialog = new ContentDialog
+//     {
+//         Title = "Warning",
+//         Content = "You have unsaved changes. Save or discard before leaving.",
+//         PrimaryButtonText = "Stay",
+//         SecondaryButtonText = "Leave",
+//         DefaultButton = ContentDialogButton.Primary,
+//         XamlRoot = App.MainWindow.Content.XamlRoot
+//     };
+//     e.Cancel = await warningDialog.ShowAsync() == ContentDialogResult.Primary;
+// }
+
+//private async void DataPropertyChanged(object sender, PropertyChangedEventArgs e)
+//{
+//    if (sender is not Student student)
+//    {
+//        return;
+//    }
+
+//    var originalStudent = Source.FirstOrDefault(s => s.MyIndex == student.MyIndex);
+//    if (originalStudent == null)
+//    {
+//        // handle property change
+//        await AddDataAsync(student);
+//        return;
+//    }
+
+//    originalStudent.UpdateInfo(student);
+//}

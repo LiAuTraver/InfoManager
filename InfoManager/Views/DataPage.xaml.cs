@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using CommunityToolkit.WinUI.UI.Controls;
+using InfoManager.Models;
 using InfoManager.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -30,18 +32,18 @@ public sealed partial class DataPage : INotifyPropertyChanged
         switch (result)
         {
             case ContentDialogResult.None:
-            return;
+                return;
             case ContentDialogResult.Primary:
-            await ViewModel.SaveDataToFileAsync(true);
-            IsModified = false;
-            return;
+                await ViewModel.SaveDataToFileAsync(true);
+                IsModified = false;
+                return;
             case ContentDialogResult.Secondary:
-            await ViewModel.SaveDataToFileAsync(false);
-            IsModified = false;
-            return;
+                await ViewModel.SaveDataToFileAsync(false);
+                IsModified = false;
+                return;
             default:
-            Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
-            return;
+                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
+                return;
         }
     }
 
@@ -55,23 +57,23 @@ public sealed partial class DataPage : INotifyPropertyChanged
         UpdateSort();
     }
 
-    private void UpdateSort()
+    private async void UpdateSort()
     {
         switch (_selectedSortOption)
         {
             case "Sort by ID":
-            ViewModel.SortByIdCommand.Execute(IsAscending);
-            return;
+                ViewModel.SortByIdCommand.Execute(IsAscending);
+                return;
             case "Sort by Average":
-            ViewModel.SortByAverageCommand.Execute(IsAscending);
-            return;
+                ViewModel.SortByAverageCommand.Execute(IsAscending);
+                return;
             case "Sort by Name":
-            ViewModel.SortByNameCommand.Execute(IsAscending);
-            return;
+                ViewModel.SortByNameCommand.Execute(IsAscending);
+                return;
             default:
-            // Do nothing, emit a warning
-            Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
-            return;
+                // Do nothing, emit a warning
+                await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", null);
+                return;
         }
     }
 
@@ -98,12 +100,12 @@ public sealed partial class DataPage : INotifyPropertyChanged
         IsEditing = !IsEditing;
     }
 
-    private async void AddStudent(object sender, RoutedEventArgs e)
+    private async void AddData(object sender, RoutedEventArgs e)
     {
-        await AddStudentDialog(sender);
+        await AddDataDialog(sender);
     }
 
-    private async Task AddStudentDialog(object sender)
+    private async Task AddDataDialog(object sender)
     {
         var idBox = new TextBox { Header = "ID" };
         var nameBox = new TextBox { Header = "Name" };
@@ -133,47 +135,48 @@ public sealed partial class DataPage : INotifyPropertyChanged
         switch (result)
         {
             case ContentDialogResult.None:
-            return;
+                return;
             case ContentDialogResult.Primary:
-            // Use the Text property of the TextBoxes to get the input values
-            if (idBox.Text is not { } id)
-            {
-                await SimpleContentDialog("ID cannot be empty.", "Warning", sender);
-                return;
-            }
+                // Use the Text property of the TextBoxes to get the input values
+                if (idBox.Text is not { } id)
+                {
+                    await SimpleContentDialog("ID cannot be empty.", "Warning", sender);
+                    return;
+                }
 
-            if (nameBox.Text is not { } name)
-            {
-                await SimpleContentDialog("Name cannot be empty.", "Warning", sender);
-                return;
-            }
+                if (nameBox.Text is not { } name)
+                {
+                    await SimpleContentDialog("Name cannot be empty.", "Warning", sender);
+                    return;
+                }
 
-            if (gradeStringBox.Text is not { } gradeString)
-            {
-                await SimpleContentDialog("Grade cannot be empty.", "Warning", sender);
-                return;
-            }
+                if (gradeStringBox.Text is not { } gradeString)
+                {
+                    await SimpleContentDialog("Grade cannot be empty.", "Warning", sender);
+                    return;
+                }
 
-            if (await ViewModel.AddDataAsync(id, name, gradeString) is not true)
-            {
-                await SimpleContentDialog("Student with ID \"" + id + "\" already exists.", "Error", sender);
-                return;
-            }
+                if (await ViewModel.AddDataAsync(id, name, gradeString) is not true)
+                {
+                    await SimpleContentDialog("Student with ID \"" + id + "\" already exists.", "Error", sender);
+                    return;
+                }
 
-            // successfully added student
-            IsModified = true;
-            return;
+                // successfully added student
+                IsModified = true;
+                return;
             case ContentDialogResult.Secondary:
-            Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
-            return;
+                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
+                return;
             default:
-            Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
-            return;
+                Console.WriteLine(@"Oops! Something went wrong. You shouldn't be here.");
+                return;
         }
     }
 
-    private static async Task SimpleContentDialog(string message, string warningLevel, object sender)
+    private static async Task SimpleContentDialog(string message, string warningLevel, object? sender)
     {
+        sender ??= App.MainWindow.Content;
         var dialog = new ContentDialog
         {
             Title = warningLevel,
@@ -205,7 +208,7 @@ public sealed partial class DataPage : INotifyPropertyChanged
             DefaultButton = ContentDialogButton.Close,
             XamlRoot = ((FrameworkElement)sender).XamlRoot
             //XamlRoot = XamlRoot // Set the XamlRoot to ensure it's displayed correctly
-            // that is IMPORTANT otherwise exception would be thrown, 
+            // that is IMPORTANT otherwise exception would be thrown,
             // because a dialog could only be bind to exactly one window (XamlRoot denotes that window)
         };
 
@@ -234,23 +237,39 @@ public sealed partial class DataPage : INotifyPropertyChanged
         IsModified = true;
     }
 
-    protected async override void OnNavigatedFrom(NavigationEventArgs e)
+    private async void CellDataChanged(object? sender, DataGridCellEditEndedEventArgs e)
     {
-        if (IsModified is not true)
+        if(e.Row.DataContext is not Student student)
         {
-            base.OnNavigatedFrom(e);
+            await SimpleContentDialog("Oops! Something went wrong. You shouldn't be here.", "Error", sender);
+            return;
+        }
+        // find that student in the list
+        var isDataChanged = ViewModel.IsDataChanged(student);
+        if (isDataChanged is null)
+        {
+            // parse error or something else
+            await SimpleContentDialog("The format of the data isn't correct.", "Error", sender);
+            return;
         }
 
-        var warningDialog = new ContentDialog
+        // fixme: temporarily do it: shouldn't use the whole list to update the UI
+        UpdateSort();
+        if(isDataChanged is not true)
         {
-            Title = "Warning",
-            Content = "You have unsaved changes. Save or discard before leaving.",
-            CloseButtonText = "Ok",
-            DefaultButton = ContentDialogButton.Close,
-            XamlRoot = this.XamlRoot
-        };
-        await warningDialog.ShowAsync();
+            // do not change `IsModified` here; maybe the data is modified before or not modified at all
+
+
+            await SimpleContentDialog("Data not changed.", "Info", sender);
+            return;
+        }
+        // successfully modified student; no need to prompt a dialog
+        IsModified = true;
     }
+    // private void CellDataTemp(object? sender, DataGridBeginningEditEventArgs e)
+    // {
+    //     _cellDataTemp = e.Row.DataContext as Student;
+    // }
 }
 
 // member variables and ctor part
@@ -262,8 +281,11 @@ public sealed partial class DataPage : INotifyPropertyChanged
         IsAscending = true;
         IsEditing = false;
         IsModified = false;
-        InitializeComponent();
+        this.InitializeComponent();
+        this.NavigationCacheMode = NavigationCacheMode.Enabled;
     }
+
+    // private object? _cellDataTemp = null;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
