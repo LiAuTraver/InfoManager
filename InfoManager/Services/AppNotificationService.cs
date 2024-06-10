@@ -47,7 +47,9 @@ public class AppNotificationService(INavigationService navigationService) : IApp
         App.MainWindow.DispatcherQueue.TryEnqueue(() =>
         {
             App.MainWindow.ShowMessageDialogAsync(
-                "TODO: Handle notification invocations when your app is already running.", "Notification Invoked");
+                "Congratulations! You have successfully installed the app.",
+                "Welcome to Lyc's Student InfoManager App"
+                );
 
             App.MainWindow.BringToFront();
         });

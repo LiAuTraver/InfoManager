@@ -73,7 +73,8 @@
                     NavigateUri="{x:Bind ViewModel.MyUri}"
                     Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
                 <HyperlinkButton
-                    x:Uid="SettingsPage_PrivacyTermsLink"
+                    Content="App Source Code"
+                    NavigateUri="{x:Bind ViewModel.MyAppSourceCodeUri}"
                     Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
             </StackPanel>
         </StackPanel>

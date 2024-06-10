@@ -12,8 +12,8 @@
 
     <Identity
             Name="e6f4e47e-48e9-4f3a-ae27-3524c00b225e"
-            Publisher="CN=LiAu"
-            Version="1.0.0.0"/>
+            Publisher="CN=LiAu&apos;s Debugging Lisense"
+            Version="1.0.1.0"/>
 
     <mp:PhoneIdentity PhoneProductId="e6f4e47e-48e9-4f3a-ae27-3524c00b225e"
                       PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
@@ -39,7 +39,7 @@
                      EntryPoint="$targetentrypoint$">
             <uap:VisualElements
                     DisplayName="ms-resource:AppDisplayName"
-                    Description="ms-resource:AppDescription"
+                    Description="Lyc&apos;s small Project 2024 at HDU"
                     BackgroundColor="transparent"
                     Square150x150Logo="Assets\Square150x150Logo.png"
                     Square44x44Logo="Assets\Square44x44Logo.png">

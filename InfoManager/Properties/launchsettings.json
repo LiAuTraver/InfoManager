@@ -1,7 +1,8 @@
-﻿{
+{
   "profiles": {
     "InfoManager (Package)": {
-      "commandName": "MsixPackage"
+      "commandName": "MsixPackage",
+      "nativeDebugging": true
     },
     "InfoManager (Unpackaged)": {
       "commandName": "Project"

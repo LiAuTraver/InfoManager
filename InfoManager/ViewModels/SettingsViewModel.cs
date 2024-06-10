@@ -12,10 +12,10 @@ namespace InfoManager.ViewModels;
 public partial class SettingsViewModel : ObservableRecipient
 {
     private const string Uri = "https://github.com/liautraver";
+    private const string AppSourceCodeUri = "https://github.com/liautraver/InfoManager";
     private readonly IThemeSelectorService _themeSelectorService;
-
     public readonly Uri MyUri = new(Uri);
-
+    public readonly Uri MyAppSourceCodeUri = new(AppSourceCodeUri);
     [ObservableProperty] private ElementTheme _elementTheme;
 
     [ObservableProperty] private string _versionDescription;
