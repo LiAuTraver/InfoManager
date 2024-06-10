@@ -13,7 +13,7 @@
     <Identity
             Name="e6f4e47e-48e9-4f3a-ae27-3524c00b225e"
             Publisher="CN=LiAu&apos;s Debugging Lisense"
-            Version="1.0.1.0"/>
+            Version="1.0.3.0"/>
 
     <mp:PhoneIdentity PhoneProductId="e6f4e47e-48e9-4f3a-ae27-3524c00b225e"
                       PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
